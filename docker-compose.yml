@@ -1,0 +1,35 @@
+services:
+  syncreel:
+    build: .
+    # image: ghcr.io/martion289/syncreel:latest
+    container_name: syncreel
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATA_DIR: /data
+      # Optional: set PUBLIC_URL & PLEX_URL here, or configure in the web Setup Wizard:
+      # PUBLIC_URL: https://watch.example.com
+      # PLEX_URL: http://host.docker.internal:32400
+    ports:
+      - "3000:3000"
+    volumes:
+      - syncreel_data:/data
+    # Uncomment if Plex runs directly on the Docker host (Linux):
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+  # Optional Dynamic DNS updater (run with: docker compose --profile ddns up -d)
+  cloudflare-ddns:
+    image: favonia/cloudflare-ddns:latest
+    container_name: syncreel-ddns
+    profiles: ["ddns"]
+    restart: unless-stopped
+    environment:
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+      DOMAINS: ${DOMAIN:-watch.example.com}
+      PROXIED: "false"
+      IP6_PROVIDER: none
+
+volumes:
+  syncreel_data:

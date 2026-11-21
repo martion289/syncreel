@@ -1,0 +1,14 @@
+watch.example.com {
+    encode zstd gzip
+
+    # If using Cloudflare DNS-01 TLS:
+    # tls {
+    #     dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    # }
+
+    # Caddy automatically handles HTTPS, WebSocket upgrades (/ws),
+    # and unbuffered streaming for HLS video segments.
+    reverse_proxy syncreel:3000 {
+        flush_interval -1
+    }
+}

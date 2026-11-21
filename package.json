@@ -1,0 +1,25 @@
+{
+  "name": "syncreel",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Self-hosted Watch Together PWA for Plex Media Server",
+  "homepage": "https://github.com/martion289/syncreel#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martion289/syncreel.git"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build --workspace=@syncreel/shared && npm run build --workspace=@syncreel/server && npm run build --workspace=@syncreel/web",
+    "typecheck": "npm run typecheck --workspace=@syncreel/shared && npm run typecheck --workspace=@syncreel/server && npm run typecheck --workspace=@syncreel/web",
+    "test": "npm run test --workspace=@syncreel/server && npm run test --workspace=@syncreel/web"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
