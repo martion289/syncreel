@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
-  Check,
-  Copy,
   Film,
   Flame,
   Loader2,
   MessageSquare,
+  Share2,
   WifiOff
 } from 'lucide-react';
 import { isGuestPreviewTab } from '../lib/api.js';
@@ -20,6 +19,7 @@ import {
 } from '../components/Room/FloatingReactions.js';
 import { LibraryBrowser } from '../components/Library/LibraryBrowser.js';
 import { SwipeMatchModal } from '../components/Room/SwipeMatchModal.js';
+import { InviteModal } from '../components/Room/InviteModal.js';
 
 const FLOATING_OVERLAY_STORAGE_KEY = 'syncreel_floating_overlay_v1';
 
@@ -37,7 +37,11 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
   const [sidebarOpen, setSidebarOpen] = useState(!isTvMode);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [swipeOpen, setSwipeOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('invite') === '1'
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [floatingOverlayEnabled, setFloatingOverlayEnabled] = useState<boolean>(() => {
     try {
@@ -167,13 +171,15 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
     }
   }, [snapshot, snapshot?.chatHistory, floatingOverlayEnabled, isFullscreen, sidebarOpen]);
 
-  const copyInvite = async () => {
-    await navigator.clipboard
-      .writeText(`${window.location.origin}/room/${snapshot?.code ?? roomCode}`)
-      .catch(() => undefined);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('invite') === '1') {
+      url.searchParams.delete('invite');
+      const qs = url.searchParams.toString();
+      window.history.replaceState({}, '', `${url.pathname}${qs ? `?${qs}` : ''}`);
+    }
+  }, []);
 
   if (kickedReason) {
     return (
@@ -236,15 +242,12 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
 
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => void copyInvite()}
+            type="button"
+            onClick={() => setInviteOpen(true)}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#202026] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D]/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
           >
-            {copied ? (
-              <Check className="w-3.5 h-3.5 text-[#34C77B]" />
-            ) : (
-              <Copy className="w-3.5 h-3.5 text-[#E5A00D]" />
-            )}
-            <span className="hidden sm:inline">{copied ? 'Copied' : 'Invite'}</span>
+            <Share2 className="w-3.5 h-3.5 text-[#E5A00D]" />
+            <span className="hidden sm:inline">Invite</span>
           </button>
 
           {(selfRole === 'host' || snapshot.swipeMatch) && (
@@ -309,6 +312,7 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
             onToggleSidebar={() => setSidebarOpen((o) => !o)}
             onOpenLibrary={selfRole === 'host' ? () => setLibraryOpen(true) : undefined}
             onOpenSwipeMatch={selfRole === 'host' ? () => setSwipeOpen(true) : undefined}
+            onOpenInvite={() => setInviteOpen(true)}
             onFullscreenChange={setIsFullscreen}
             isSelfMuted={Boolean(selfEntry?.isMuted)}
             floatingOverlayEnabled={floatingOverlayEnabled}
@@ -345,6 +349,7 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
             poll={snapshot.poll}
             onOpenLibrary={selfRole === 'host' ? () => setLibraryOpen(true) : undefined}
             onOpenSwipeMatch={selfRole === 'host' ? () => setSwipeOpen(true) : undefined}
+            onOpenInvite={() => setInviteOpen(true)}
             sendEvent={sendEvent}
           />
         )}
@@ -371,6 +376,25 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
         selfSwipedKeys={snapshot.selfSwipedKeys}
         matchBanner={swipeMatchBanner}
         sendEvent={sendEvent}
+      />
+
+      <InviteModal
+        open={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        roomCode={snapshot.code}
+        roomName={snapshot.name}
+        hasPin={snapshot.hasPin}
+        hasWebhook={snapshot.hasWebhook}
+        selfRole={selfRole}
+        participants={snapshot.participants}
+        currentMediaTitle={snapshot.currentMedia?.title}
+        onSendWebhook={
+          selfRole === 'host' && snapshot.hasWebhook
+            ? () => sendEvent({ type: 'room:notifyWebhook' })
+            : undefined
+        }
+        onOpenLibrary={selfRole === 'host' ? () => setLibraryOpen(true) : undefined}
+        onOpenSwipeMatch={selfRole === 'host' ? () => setSwipeOpen(true) : undefined}
       />
     </div>
   );

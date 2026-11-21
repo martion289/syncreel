@@ -34,6 +34,7 @@ import {
   RotateCw,
   Send,
   Settings2,
+  Share2,
   SkipForward,
   Users,
   Volume2,
@@ -74,6 +75,7 @@ interface VideoStageProps {
   onToggleSidebar: () => void;
   onOpenLibrary?: () => void;
   onOpenSwipeMatch?: () => void;
+  onOpenInvite?: () => void;
   overlay?: ReactNode;
   onFullscreenChange?: (isFullscreen: boolean) => void;
   isSelfMuted?: boolean;
@@ -103,6 +105,7 @@ export function VideoStage(props: VideoStageProps) {
     onToggleSidebar,
     onOpenLibrary,
     onOpenSwipeMatch,
+    onOpenInvite,
     overlay,
     onFullscreenChange,
     isSelfMuted = false,
@@ -731,9 +734,9 @@ export function VideoStage(props: VideoStageProps) {
               ? 'Choose a title from Plex or launch Swipe Match to pick something together.'
               : 'Waiting for the host to pick a movie or start Swipe Match.'}
           </p>
-          {selfRole === 'host' && (
+          {(selfRole === 'host' || onOpenInvite) && (
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {onOpenLibrary && (
+              {selfRole === 'host' && onOpenLibrary && (
                 <button
                   onClick={onOpenLibrary}
                   className="px-5 py-2.5 rounded-lg bg-[#E5A00D] text-[#111113] font-semibold text-sm hover:bg-[#f0ad1c] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
@@ -741,13 +744,23 @@ export function VideoStage(props: VideoStageProps) {
                   Browse Plex Library
                 </button>
               )}
-              {onOpenSwipeMatch && (
+              {selfRole === 'host' && onOpenSwipeMatch && (
                 <button
                   onClick={onOpenSwipeMatch}
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16161A] border border-[#2B2B33] text-[#F4F2EE] font-semibold text-sm hover:border-[#E5A00D] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
                 >
                   <Flame className="w-4 h-4 text-[#E5A00D]" />
                   <span>Swipe Match</span>
+                </button>
+              )}
+              {onOpenInvite && (
+                <button
+                  type="button"
+                  onClick={onOpenInvite}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16161A] border border-[#2B2B33] text-[#F4F2EE] font-semibold text-sm hover:border-[#E5A00D] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                >
+                  <Share2 className="w-4 h-4 text-[#E5A00D]" />
+                  <span>Invite Friends</span>
                 </button>
               )}
             </div>

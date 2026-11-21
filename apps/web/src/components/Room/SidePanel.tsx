@@ -25,6 +25,7 @@ import {
   Play,
   Plus,
   Send,
+  Share2,
   Trash2,
   UserCheck,
   UserX,
@@ -50,6 +51,7 @@ interface SidePanelProps {
   poll: MoviePoll | null;
   onOpenLibrary?: () => void;
   onOpenSwipeMatch?: () => void;
+  onOpenInvite?: () => void;
   sendEvent: (event: ClientEvent) => void;
 }
 
@@ -70,6 +72,7 @@ export function SidePanel(props: SidePanelProps) {
     poll,
     onOpenLibrary,
     onOpenSwipeMatch,
+    onOpenInvite,
     sendEvent
   } = props;
 
@@ -343,13 +346,32 @@ export function SidePanel(props: SidePanelProps) {
               </span>
               <span className="font-mono text-xs font-semibold text-[#E5A00D]">{roomCode}</span>
             </div>
-            <button
-              onClick={() => void copyInvite()}
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-[#E5A00D] text-[#111113] text-xs font-semibold hover:bg-[#f0ad1c] transition"
-            >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Invite Link Copied' : 'Copy Invite Link'}</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              {onOpenInvite ? (
+                <button
+                  type="button"
+                  onClick={onOpenInvite}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#E5A00D] text-[#111113] text-xs font-semibold hover:bg-[#f0ad1c] transition"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share &amp; Invite Everyone</span>
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => void copyInvite()}
+                aria-label="Quick copy invite link"
+                title="Quick copy invite link"
+                className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition ${
+                  onOpenInvite
+                    ? 'px-2.5 bg-[#202026] border border-[#2B2B33] text-[#F4F2EE] hover:border-[#E5A00D]'
+                    : 'w-full bg-[#E5A00D] text-[#111113] hover:bg-[#f0ad1c]'
+                }`}
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-[#34C77B]" /> : <Copy className="w-3.5 h-3.5" />}
+                {!onOpenInvite && <span>{copied ? 'Invite Link Copied' : 'Copy Invite Link'}</span>}
+              </button>
+            </div>
           </div>
 
           {/* Host Group Actions */}

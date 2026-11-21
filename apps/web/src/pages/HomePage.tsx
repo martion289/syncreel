@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AuthUser, StreamMode } from '@syncreel/shared';
 import {
   ArrowRight,
+  Dices,
   Download,
   ExternalLink,
   Film,
@@ -13,6 +14,7 @@ import {
   Tv
 } from 'lucide-react';
 import { api } from '../lib/api.js';
+import { generateFunRoomSlug, saveSessionRoomPin } from '../lib/inviteShare.js';
 import { usePwaInstall } from '../hooks/usePwaInstall.js';
 import { AdminModal } from '../components/Admin/AdminModal.js';
 
@@ -101,7 +103,10 @@ export function HomePage({ onNavigate, initialUser }: HomePageProps) {
         hostOnlyControl: hostOnly,
         streamMode
       });
-      onNavigate(`/room/${created.code}`);
+      if (roomPin.trim()) {
+        saveSessionRoomPin(created.code, roomPin.trim());
+      }
+      onNavigate(`/room/${created.code}?invite=1`);
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Could not create room');
     } finally {
@@ -266,15 +271,32 @@ export function HomePage({ onNavigate, initialUser }: HomePageProps) {
                       >
                         Custom URL (Optional)
                       </label>
-                      <input
-                        id="custom-slug"
-                        type="text"
-                        value={customSlug}
-                        onChange={(e) => setCustomSlug(e.target.value.toLowerCase())}
-                        maxLength={32}
-                        placeholder="friday-night"
-                        className="w-full px-3 py-2 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-mono text-[#F4F2EE] placeholder-[#686670] focus:outline-none focus:border-[#E5A00D]"
-                      />
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          id="custom-slug"
+                          type="text"
+                          value={customSlug}
+                          onChange={(e) => setCustomSlug(e.target.value.toLowerCase())}
+                          maxLength={32}
+                          placeholder="friday-night"
+                          className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-mono text-[#F4F2EE] placeholder-[#686670] focus:outline-none focus:border-[#E5A00D]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setCustomSlug(generateFunRoomSlug())}
+                          aria-label="Generate memorable room code"
+                          title="Generate fun room link"
+                          className="p-2 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-[#E5A00D] hover:border-[#E5A00D] hover:bg-[#202026] transition shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                        >
+                          <Dices className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <p className="text-[10px] font-mono text-[#686670] mt-1 truncate">
+                        {typeof window !== 'undefined' ? window.location.host : ''}/room/
+                        <span className="text-[#9C9AA6]">
+                          {customSlug.trim() || '<random-code>'}
+                        </span>
+                      </p>
                     </div>
                   </div>
 
