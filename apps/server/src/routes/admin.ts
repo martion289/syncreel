@@ -33,7 +33,7 @@ export function registerAdminRoutes(app: FastifyInstance, ctx: AppContext): void
     return {
       settings: {
         plexUrl: ctx.getPlexUrl(),
-        serverName: owner?.serverName || 'Plex Media Server',
+        serverName: owner?.serverName || 'Media Server',
         allowPlexFriends: settings.allowPlexFriends,
         webhookUrl: settings.webhookUrl,
         webhookAutoNotify: settings.webhookAutoNotify,

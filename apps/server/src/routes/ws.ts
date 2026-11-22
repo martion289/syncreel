@@ -196,7 +196,7 @@ export function registerWsRoutes(app: FastifyInstance, ctx: AppContext): void {
             } catch (err) {
               sendError(
                 'MEDIA_ERROR',
-                err instanceof Error ? err.message : 'Failed to load Plex media'
+                err instanceof Error ? err.message : 'Failed to load media'
               );
             }
             break;
@@ -204,7 +204,7 @@ export function registerWsRoutes(app: FastifyInstance, ctx: AppContext): void {
 
           case 'room:queueAdd': {
             if (role !== 'host') {
-              sendError('FORBIDDEN', 'Only the host can queue Plex items');
+              sendError('FORBIDDEN', 'Only the host can queue media items');
               break;
             }
             try {
@@ -446,6 +446,37 @@ export function registerWsRoutes(app: FastifyInstance, ctx: AppContext): void {
                 err instanceof Error ? err.message : 'Failed to queue matched title'
               );
             }
+            break;
+          }
+
+          case 'swipe:knockoutStart': {
+            try {
+              ctx.roomManager.startSwipeKnockout(room, participant.name);
+            } catch (err) {
+              sendError(
+                'SWIPE_ERROR',
+                err instanceof Error ? err.message : 'Failed to start 1v1 Knockout'
+              );
+            }
+            break;
+          }
+
+          case 'swipe:knockoutVote': {
+            ctx.roomManager.voteSwipeKnockout(room, participant.id, event.ratingKey);
+            break;
+          }
+
+          case 'swipe:knockoutTieBreak': {
+            if (event.mode === 'pick' && role !== 'host') {
+              sendError('FORBIDDEN', 'Only the host can manually pick a tie-breaker winner');
+              break;
+            }
+            ctx.roomManager.resolveSwipeKnockoutTie(
+              room,
+              participant.name,
+              event.mode,
+              event.ratingKey
+            );
             break;
           }
 

@@ -125,7 +125,23 @@ export function resolveRoomParticipant(
   ctx: AppContext,
   roomCode: string
 ): { id: string; name: string; role: ParticipantRole; personalPlexToken?: string } | null {
+  const guest = getGuestSession(req, ctx);
   const host = getHostAuthSession(req, ctx);
+
+  // Explicit single-account 2nd-device seat or guest preview tab takes priority over host cookie
+  if (
+    guest &&
+    guest.roomCode.toUpperCase() === roomCode.trim().toUpperCase() &&
+    (guest.isSeat || isPreviewGuestRequest(req))
+  ) {
+    return {
+      id: guest.participantId,
+      name: guest.name,
+      role: 'guest',
+      personalPlexToken: host?.plexToken
+    };
+  }
+
   if (host) {
     return {
       id: `host-${host.plexUserId}`,
@@ -135,7 +151,6 @@ export function resolveRoomParticipant(
     };
   }
 
-  const guest = getGuestSession(req, ctx);
   if (guest && guest.roomCode.toUpperCase() === roomCode.trim().toUpperCase()) {
     return {
       id: guest.participantId,

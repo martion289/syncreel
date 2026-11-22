@@ -55,7 +55,7 @@ export function buildInviteMessage(params: BuildInviteMessageInput): string {
     lines.push(`Now playing: ${mediaTitle.trim()}`);
   }
   lines.push(
-    'No Plex account needed — tap to watch in sync:',
+    'No account needed — tap to watch in sync:',
     inviteUrl,
     `Room code: ${roomCode}`
   );

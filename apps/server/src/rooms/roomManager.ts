@@ -1,22 +1,25 @@
 import crypto from 'node:crypto';
 import type { WebSocket } from 'ws';
-import type {
-  AdminRoomInfo,
-  ChatMessage,
-  MediaDetails,
-  MediaSummary,
-  MoviePoll,
-  Participant,
-  ParticipantRole,
-  QualityPreset,
-  QueueItem,
-  ReadyCheckState,
-  RoomPublicInfo,
-  RoomSnapshot,
-  ServerEvent,
-  StreamMode,
-  SwipeMatchConfig,
-  SwipeMatchState
+import {
+  advanceKnockoutBracket,
+  createKnockoutBracket,
+  type AdminRoomInfo,
+  type ChatMessage,
+  type MediaDetails,
+  type MediaSummary,
+  type MoviePoll,
+  type Participant,
+  type ParticipantRole,
+  type QualityPreset,
+  type QueueItem,
+  type ReadyCheckState,
+  type RoomPublicInfo,
+  type RoomSnapshot,
+  type ServerEvent,
+  type StreamMode,
+  type SwipeKnockoutState,
+  type SwipeMatchConfig,
+  type SwipeMatchState
 } from '@syncreel/shared';
 import { hashPin, verifyPin } from '../auth/tokens.js';
 import { PlexClient, shuffleCopy } from '../plex/client.js';
@@ -75,12 +78,14 @@ interface SwipeMatchInternal {
   swipedByParticipant: Map<string, Set<string>>;
   orderByParticipant: Map<string, string[]>;
   matchedRatingKeys: string[];
+  knockout: SwipeKnockoutState | null;
   createdAtMs: number;
 }
 
 export interface RoomInstance {
   code: string;
   name: string;
+  purpose: 'watch' | 'picker';
   pinHash: string | null;
   streamMode: StreamMode;
   ecoQuality: QualityPreset;
@@ -144,6 +149,7 @@ export class RoomManager {
     name?: string;
     slug?: string;
     pin?: string;
+    purpose?: 'watch' | 'picker';
     hostOnlyControl?: boolean;
     streamMode?: StreamMode;
     ecoQuality?: QualityPreset;
@@ -197,6 +203,7 @@ export class RoomManager {
     const room: RoomInstance = {
       code: displayCode,
       name: options.name?.trim() || 'Movie Night',
+      purpose: options.purpose ?? 'watch',
       pinHash: cleanPin ? hashPin(cleanPin) : null,
       streamMode: options.streamMode ?? 'per-viewer',
       ecoQuality: options.ecoQuality ?? '1080p-8m',
@@ -300,6 +307,7 @@ export class RoomManager {
     return {
       code: room.code,
       name: room.name,
+      purpose: room.purpose,
       hasPin: Boolean(room.pinHash),
       participantCount: connectedCount,
       currentMediaTitle: media?.title,
@@ -382,6 +390,23 @@ export class RoomManager {
       );
     }
 
+    if (room.swipeMatch && !wasConnected) {
+      const connectedIds = [...room.participants.values()]
+        .filter((p) => p.isConnected)
+        .map((p) => p.id);
+      if (room.swipeMatch.status === 'finished' && !room.swipeMatch.swipedByParticipant.has(entry.id)) {
+        room.swipeMatch.status = 'active';
+      }
+      if (connectedIds.length >= 2) {
+        room.swipeMatch.matchedRatingKeys = room.swipeMatch.deck
+          .filter((item) => {
+            const likes = room.swipeMatch!.likesByRatingKey.get(item.ratingKey);
+            return Boolean(likes && connectedIds.every((id) => likes.has(id)));
+          })
+          .map((item) => item.ratingKey);
+      }
+    }
+
     this.sendToSocket(ws, {
       type: 'room:snapshot',
       snapshot: this.serializeSnapshotFor(room, entry.id),
@@ -394,6 +419,9 @@ export class RoomManager {
         type: 'room:participants',
         participants: this.serializeParticipants(room)
       });
+      if (room.swipeMatch) {
+        this.broadcastSwipeUpdate(room);
+      }
     }
   }
 
@@ -720,6 +748,7 @@ export class RoomManager {
       swipedByParticipant: new Map(),
       orderByParticipant,
       matchedRatingKeys: [],
+      knockout: null,
       createdAtMs: Date.now()
     };
 
@@ -784,6 +813,166 @@ export class RoomManager {
     this.broadcastSwipeUpdate(room);
   }
 
+  private getKnockoutCandidates(sm: SwipeMatchInternal): MediaSummary[] {
+    const byKey = new Map(sm.deck.map((item) => [item.ratingKey, item]));
+    const matched = sm.matchedRatingKeys
+      .map((key) => byKey.get(key))
+      .filter((item): item is MediaSummary => Boolean(item));
+    if (matched.length >= 2) {
+      return matched;
+    }
+
+    const matchSet = new Set(sm.matchedRatingKeys);
+    const partial = sm.deck
+      .filter((item) => !matchSet.has(item.ratingKey))
+      .map((item) => ({
+        item,
+        likes: sm.likesByRatingKey.get(item.ratingKey)?.size ?? 0
+      }))
+      .filter((entry) => entry.likes > 0)
+      .sort((a, b) => b.likes - a.likes)
+      .slice(0, 8)
+      .map((entry) => entry.item);
+
+    return partial.length >= 2 ? partial : [];
+  }
+
+  startSwipeKnockout(room: RoomInstance, actorName: string): SwipeKnockoutState {
+    const sm = room.swipeMatch;
+    if (!sm) {
+      throw new Error('No active Swipe Match session.');
+    }
+    const candidates = this.getKnockoutCandidates(sm);
+    if (candidates.length < 2) {
+      throw new Error('Need at least 2 matched or liked titles to start a 1v1 Knockout.');
+    }
+
+    const bracket = createKnockoutBracket(candidates);
+    const knockout: SwipeKnockoutState = {
+      ...bracket,
+      votesByParticipantId: {},
+      tied: false,
+      lastTieBreakMessage: null
+    };
+    sm.knockout = knockout;
+    this.broadcast(room, {
+      type: 'room:notice',
+      level: 'info',
+      message: `${actorName} started the 1v1 Knockout (${candidates.length} contenders)!`
+    });
+    this.broadcastSwipeUpdate(room);
+    return knockout;
+  }
+
+  voteSwipeKnockout(
+    room: RoomInstance,
+    participantId: string,
+    ratingKey: string
+  ): SwipeKnockoutState | null {
+    const sm = room.swipeMatch;
+    const ko = sm?.knockout;
+    if (!sm || !ko || ko.champion || ko.currentMatchIndex >= ko.matchups.length) {
+      return null;
+    }
+
+    const activeMatch = ko.matchups[ko.currentMatchIndex];
+    const leftKey = activeMatch.left.ratingKey;
+    const rightKey = activeMatch.right.ratingKey;
+    if (ratingKey !== leftKey && ratingKey !== rightKey) {
+      return null;
+    }
+
+    const votesByParticipantId: Record<string, string> = {
+      ...ko.votesByParticipantId,
+      [participantId]: ratingKey
+    };
+
+    const connectedIds = [...room.participants.values()]
+      .filter((p) => p.isConnected)
+      .map((p) => p.id);
+    const requiredIds = connectedIds.length > 0 ? connectedIds : [participantId];
+
+    let leftVotes = 0;
+    let rightVotes = 0;
+    for (const id of requiredIds) {
+      const vote = votesByParticipantId[id];
+      if (vote === leftKey) leftVotes += 1;
+      else if (vote === rightKey) rightVotes += 1;
+    }
+
+    const totalVotes = leftVotes + rightVotes;
+    const majorityCount = Math.floor(requiredIds.length / 2) + 1;
+
+    let winnerKey: string | null = null;
+    if (leftVotes >= majorityCount || (totalVotes >= requiredIds.length && leftVotes > rightVotes)) {
+      winnerKey = leftKey;
+    } else if (
+      rightVotes >= majorityCount ||
+      (totalVotes >= requiredIds.length && rightVotes > leftVotes)
+    ) {
+      winnerKey = rightKey;
+    }
+
+    if (winnerKey) {
+      const nextBracket = advanceKnockoutBracket(ko, winnerKey);
+      sm.knockout = {
+        ...nextBracket,
+        votesByParticipantId: {},
+        tied: false,
+        lastTieBreakMessage: null
+      };
+    } else {
+      sm.knockout = {
+        ...ko,
+        votesByParticipantId,
+        tied: totalVotes >= requiredIds.length && leftVotes === rightVotes
+      };
+    }
+
+    this.broadcastSwipeUpdate(room);
+    return sm.knockout;
+  }
+
+  resolveSwipeKnockoutTie(
+    room: RoomInstance,
+    actorName: string,
+    mode: 'coinflip' | 'pick',
+    ratingKey?: string
+  ): SwipeKnockoutState | null {
+    const sm = room.swipeMatch;
+    const ko = sm?.knockout;
+    if (!sm || !ko || ko.champion || ko.currentMatchIndex >= ko.matchups.length) {
+      return null;
+    }
+
+    const activeMatch = ko.matchups[ko.currentMatchIndex];
+    const winner =
+      mode === 'pick' &&
+      (ratingKey === activeMatch.left.ratingKey || ratingKey === activeMatch.right.ratingKey)
+        ? ratingKey === activeMatch.left.ratingKey
+          ? activeMatch.left
+          : activeMatch.right
+        : Math.random() < 0.5
+          ? activeMatch.left
+          : activeMatch.right;
+
+    const nextBracket = advanceKnockoutBracket(ko, winner.ratingKey);
+    const lastTieBreakMessage =
+      mode === 'coinflip'
+        ? `🎲 Coin flip picked "${winner.title}"!`
+        : `⚡ ${actorName} broke the tie with "${winner.title}"!`;
+
+    sm.knockout = {
+      ...nextBracket,
+      votesByParticipantId: {},
+      tied: false,
+      lastTieBreakMessage
+    };
+
+    this.broadcastSwipeUpdate(room);
+    return sm.knockout;
+  }
+
   async playSwipeMatchItem(
     room: RoomInstance,
     ratingKey: string,
@@ -817,6 +1006,7 @@ export class RoomManager {
       likesByRatingKey,
       progressByParticipantId,
       matchedRatingKeys: [...sm.matchedRatingKeys],
+      knockout: sm.knockout,
       createdAtMs: sm.createdAtMs
     };
   }
@@ -981,6 +1171,7 @@ export class RoomManager {
     return {
       code: room.code,
       name: room.name,
+      purpose: room.purpose,
       hasPin: Boolean(room.pinHash),
       hostOnlyControl: room.sync.getHostOnlyControl(),
       streamMode: room.streamMode,

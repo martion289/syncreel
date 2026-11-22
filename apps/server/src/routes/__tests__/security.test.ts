@@ -3,7 +3,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../../app.js';
-import { HOST_COOKIE_NAME, isAllowedWsOrigin, signSessionToken } from '../../auth/tokens.js';
+import {
+  GUEST_COOKIE_NAME,
+  HOST_COOKIE_NAME,
+  isAllowedWsOrigin,
+  signSessionToken
+} from '../../auth/tokens.js';
+import { resolveRoomParticipant } from '../../context.js';
 import { validateWebhookUrl } from '../../notifications/webhook.js';
 
 const MOCK_PLEX_MEDIA = {
@@ -59,11 +65,40 @@ function createMockFetch(): typeof fetch {
         headers: { 'content-type': 'application/json' }
       });
     }
+    if (url.includes('/library/sections/') && url.includes('/all')) {
+      return new Response(
+        JSON.stringify({
+          MediaContainer: {
+            Metadata: [
+              {
+                ratingKey: '555',
+                type: 'movie',
+                title: 'Inception',
+                year: 2010,
+                duration: 8_880_000,
+                audienceRating: 8.8
+              },
+              {
+                ratingKey: '556',
+                type: 'movie',
+                title: 'Short Indie',
+                year: 2022,
+                duration: 5_100_000,
+                audienceRating: 6.9
+              }
+            ]
+          }
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      );
+    }
     if (url.includes('/library/sections')) {
-      return new Response(JSON.stringify({ MediaContainer: { Directory: [] } }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({
+          MediaContainer: { Directory: [{ key: '1', title: 'Movies', type: 'movie' }] }
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      );
     }
     return new Response('Not Found', { status: 404 });
   }) as typeof fetch;
@@ -279,5 +314,79 @@ describe('Security, Guest Isolation, Setup & Role Boundaries', () => {
 
     expect(isAllowedWsOrigin('https://watch.example.com', 'https://watch.example.com', 'watch.example.com')).toBe(true);
     expect(isAllowedWsOrigin('https://evil.attacker', 'https://watch.example.com', 'watch.example.com')).toBe(false);
+  });
+
+  it('enables allowPlexFriends by default, discovers curated categories, preloads initialRatingKey, and isolates single-account couple seats', async () => {
+    const { app, ctx, hostCookie } = await setupTestServer();
+    try {
+      expect(ctx.storage.getSettings().allowPlexFriends).toBe(true);
+
+      // Curated category discovery returns serverMachineId + filtered items
+      const discoverShort = await app.inject({
+        method: 'GET',
+        url: '/api/plex/discover?category=short-sweet&filter=movie&count=10',
+        headers: { cookie: `${HOST_COOKIE_NAME}=${hostCookie}` }
+      });
+      expect(discoverShort.statusCode).toBe(200);
+      const shortBody = discoverShort.json() as {
+        items: Array<{ ratingKey: string }>;
+        serverMachineId?: string;
+      };
+      expect(shortBody.serverMachineId).toBe('mock-machine');
+      expect(shortBody.items.some((i) => i.ratingKey === '556')).toBe(true);
+
+      // Creating a picker room pre-deals swipe deck and supports initialRatingKey preload
+      const watchCreate = await app.inject({
+        method: 'POST',
+        url: '/api/rooms',
+        headers: { cookie: `${HOST_COOKIE_NAME}=${hostCookie}` },
+        payload: {
+          name: 'Inception Night',
+          purpose: 'picker',
+          initialRatingKey: '555',
+          autoStartSwipe: { category: 'award-winning', libraryFilter: 'all', genre: null, unwatchedOnly: false, deckSize: 10 }
+        }
+      });
+      expect(watchCreate.statusCode).toBe(201);
+      const { code, purpose } = watchCreate.json() as { code: string; purpose: string };
+      expect(purpose).toBe('picker');
+      const createdRoom = ctx.roomManager.getRoom(code)!;
+      expect(createdRoom.currentMedia?.ratingKey).toBe('555');
+      expect(createdRoom.swipeMatch?.deck.length).toBeGreaterThan(0);
+
+      // Partner 2 joins with the SAME wt_host Plex cookie via forceGuestSeat: true
+      const partnerJoin = await app.inject({
+        method: 'POST',
+        url: `/api/rooms/${code}/join`,
+        headers: { cookie: `${HOST_COOKIE_NAME}=${hostCookie}` },
+        payload: { name: 'Sarah', forceGuestSeat: true }
+      });
+      expect(partnerJoin.statusCode).toBe(200);
+      const { guestToken, participantId, role } = partnerJoin.json() as {
+        guestToken: string;
+        participantId: string;
+        role: string;
+      };
+      expect(role).toBe('guest');
+      expect(participantId).not.toBe('host-42');
+
+      const partnerResolved = resolveRoomParticipant(
+        {
+          headers: {},
+          query: {},
+          cookies: {
+            [HOST_COOKIE_NAME]: hostCookie,
+            [GUEST_COOKIE_NAME]: guestToken
+          }
+        } as unknown as Parameters<typeof resolveRoomParticipant>[0],
+        ctx,
+        code
+      );
+      expect(partnerResolved?.id).toBe(participantId);
+      expect(partnerResolved?.name).toBe('Sarah');
+      expect(partnerResolved?.role).toBe('guest');
+    } finally {
+      await app.close();
+    }
   });
 });

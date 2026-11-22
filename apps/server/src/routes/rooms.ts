@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { QualityPresetSchema, StreamModeSchema } from '@syncreel/shared';
+import { QualityPresetSchema, StreamModeSchema, SwipeMatchConfigSchema } from '@syncreel/shared';
 import { GUEST_COOKIE_NAME, signSessionToken } from '../auth/tokens.js';
 import { checkPlexAuthPin, createPlexAuthPin } from '../plex/oauth.js';
 import {
@@ -15,15 +15,19 @@ const CreateRoomBody = z.object({
   name: z.string().trim().min(1).max(80).optional(),
   slug: z.string().trim().max(40).optional(),
   pin: z.string().trim().max(24).optional(),
+  purpose: z.enum(['watch', 'picker']).optional(),
   hostOnlyControl: z.boolean().optional(),
   streamMode: StreamModeSchema.optional(),
-  ecoQuality: QualityPresetSchema.optional()
+  ecoQuality: QualityPresetSchema.optional(),
+  initialRatingKey: z.string().min(1).max(64).optional(),
+  autoStartSwipe: SwipeMatchConfigSchema.optional()
 });
 
 const JoinRoomBody = z.object({
   name: z.string().trim().min(1).max(40),
   pin: z.string().trim().max(24).optional(),
-  previewGuest: z.boolean().optional()
+  previewGuest: z.boolean().optional(),
+  forceGuestSeat: z.boolean().optional()
 });
 
 const MintStreamBody = z.object({
@@ -51,14 +55,33 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     try {
       const settings = ctx.storage.getSettings();
       const room = ctx.roomManager.createRoom({
-        ...parsed.data,
+        name: parsed.data.name,
+        slug: parsed.data.slug,
+        pin: parsed.data.pin,
+        purpose: parsed.data.purpose ?? 'watch',
         hostOnlyControl: parsed.data.hostOnlyControl ?? settings.defaultHostOnlyControl,
+        streamMode: parsed.data.streamMode,
+        ecoQuality: parsed.data.ecoQuality,
         hostPlexToken: host.plexToken,
         hostUsername: host.username
       });
+
+      if (parsed.data.initialRatingKey) {
+        const plex = ctx.roomManager.getEffectivePlexClient(room);
+        if (plex) {
+          const playableKey = await plex.resolvePlayableRatingKey(parsed.data.initialRatingKey);
+          await ctx.roomManager.setRoomMedia(room, playableKey, host.username, 0);
+        }
+      }
+
+      if (parsed.data.autoStartSwipe) {
+        await ctx.roomManager.startSwipeMatch(room, parsed.data.autoStartSwipe, host.username);
+      }
+
       return reply.status(201).send({
         code: room.code,
         name: room.name,
+        purpose: room.purpose,
         hasPin: Boolean(room.pinHash),
         hostOnlyControl: room.sync.getHostOnlyControl(),
         streamMode: room.streamMode,
@@ -85,11 +108,19 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
         ? ctx.roomManager.getParticipantRole(room, participant.id, participant.role)
         : undefined;
 
+    const host = getHostAuthSession(req, ctx);
+    const hostEntry =
+      host && room ? room.participants.get(`host-${host.plexUserId}`) : undefined;
+    const hostAlreadyConnected = Boolean(
+      host && hostEntry?.isConnected && participant?.role === 'host'
+    );
+
     return {
       ...info,
       hasAccess: Boolean(participant),
       selfRole: effectiveRole,
-      selfName: participant?.name
+      selfName: participant?.name,
+      hostAlreadyConnected
     };
   });
 
@@ -105,7 +136,8 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
     }
 
     const isPreview = Boolean(parsed.data.previewGuest || req.headers['x-syncreel-role'] === 'guest');
-    if (!isPreview) {
+    const isSeatJoin = Boolean(parsed.data.forceGuestSeat);
+    if (!isPreview && !isSeatJoin) {
       const host = getHostAuthSession(req, ctx);
       if (host) {
         return {
@@ -147,6 +179,7 @@ export function registerRoomRoutes(app: FastifyInstance, ctx: AppContext): void 
         roomCode: room.code,
         participantId,
         name: parsed.data.name,
+        ...(isSeatJoin ? { isSeat: true } : {}),
         exp: Date.now() + 24 * 60 * 60_000
       },
       ctx.config.appSecret

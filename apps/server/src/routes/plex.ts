@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { SoloDeckCategorySchema } from '@syncreel/shared';
 import { getGuestSession, getHostAuthSession, type AppContext } from '../context.js';
 import { PlexClient } from '../plex/client.js';
 
@@ -11,16 +12,16 @@ export function registerPlexRoutes(app: FastifyInstance, ctx: AppContext): void 
     if (!host) {
       const guest = getGuestSession(req, ctx);
       if (guest || req.headers['x-syncreel-role'] === 'guest') {
-        reply.status(403).send({ error: 'Guests cannot browse Plex libraries' });
+        reply.status(403).send({ error: 'Guests cannot browse media libraries' });
         return undefined;
       }
-      reply.status(401).send({ error: 'Host Plex sign-in required' });
+      reply.status(401).send({ error: 'Host sign-in required' });
       return undefined;
     }
 
     const baseUrl = ctx.getPlexUrl();
     if (!baseUrl) {
-      reply.status(503).send({ error: 'Plex server URL not configured' });
+      reply.status(503).send({ error: 'Media server URL not configured' });
       return undefined;
     }
 
@@ -59,6 +60,44 @@ export function registerPlexRoutes(app: FastifyInstance, ctx: AppContext): void 
       return { items };
     }
   );
+
+  app.get<{
+    Querystring: {
+      category?: string;
+      filter?: string;
+      genre?: string;
+      unwatchedOnly?: string;
+      count?: string;
+    };
+  }>('/api/plex/discover', async (req, reply) => {
+    const plex = await requireHostPlex(req, reply);
+    if (!plex) return;
+
+    const rawCategory = req.query.category || 'unwatched';
+    const parsedCategory = SoloDeckCategorySchema.safeParse(rawCategory);
+    if (!parsedCategory.success) {
+      return reply.status(400).send({ error: 'Invalid discovery category' });
+    }
+
+    const deckSize = Math.min(50, Math.max(4, Number(req.query.count ?? 20) || 20));
+    const unwatchedOnly =
+      req.query.unwatchedOnly === '1' || req.query.unwatchedOnly === 'true';
+
+    const items = await plex.getCuratedDeckCandidates({
+      category: parsedCategory.data,
+      libraryFilter: req.query.filter || 'all',
+      genre: req.query.genre || null,
+      unwatchedOnly,
+      deckSize
+    });
+
+    const owner = ctx.storage.getOwnerAuth(ctx.config.plexUrl);
+    return {
+      items,
+      serverMachineId: owner?.serverMachineId,
+      serverName: owner?.serverName
+    };
+  });
 
   app.get('/api/plex/continue-watching', async (req, reply) => {
     const plex = await requireHostPlex(req, reply);

@@ -9,8 +9,11 @@ import type {
   QualityPreset,
   RoomPublicInfo,
   SetupStatus,
+  SoloDiscoverRequest,
+  SoloDiscoverResponse,
   StreamMode,
-  StreamSessionResponse
+  StreamSessionResponse,
+  SwipeMatchConfig
 } from '@syncreel/shared';
 
 export function isGuestPreviewTab(): boolean {
@@ -148,6 +151,17 @@ export const api = {
     return fetchJson<{ items: MediaSummary[] }>(`/api/plex/random?${params.toString()}`);
   },
 
+  discoverPlex: (input: SoloDiscoverRequest) => {
+    const params = new URLSearchParams({
+      category: input.category,
+      filter: input.libraryFilter,
+      count: String(input.deckSize)
+    });
+    if (input.genre) params.set('genre', input.genre);
+    if (input.unwatchedOnly) params.set('unwatchedOnly', '1');
+    return fetchJson<SoloDiscoverResponse>(`/api/plex/discover?${params.toString()}`);
+  },
+
   getContinueWatching: () => fetchJson<{ items: MediaSummary[] }>('/api/plex/continue-watching'),
 
   getRecentlyAdded: () => fetchJson<{ items: MediaSummary[] }>('/api/plex/recently-added'),
@@ -171,13 +185,17 @@ export const api = {
     name?: string;
     slug?: string;
     pin?: string;
+    purpose?: 'watch' | 'picker';
     hostOnlyControl?: boolean;
     streamMode?: StreamMode;
     ecoQuality?: QualityPreset;
+    initialRatingKey?: string;
+    autoStartSwipe?: SwipeMatchConfig;
   }) =>
     fetchJson<{
       code: string;
       name: string;
+      purpose?: 'watch' | 'picker';
       hasPin: boolean;
       hostOnlyControl: boolean;
       streamMode: StreamMode;
@@ -194,7 +212,10 @@ export const api = {
       code
     ),
 
-  joinRoom: async (code: string, input: { name: string; pin?: string }) => {
+  joinRoom: async (
+    code: string,
+    input: { name: string; pin?: string; forceGuestSeat?: boolean }
+  ) => {
     const previewGuest = isGuestPreviewTab();
     const res = await fetchJson<{
       joined: boolean;

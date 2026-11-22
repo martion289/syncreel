@@ -1,13 +1,13 @@
 {
-  "name": "SyncReel — Watch Together for Plex",
+  "name": "SyncReel — Watch Together & Movie Picker",
   "short_name": "SyncReel",
-  "description": "Self-hosted screening rooms, Swipe Match, and synchronized watch parties for Plex.",
+  "description": "Self-hosted private screening rooms, Swipe Match, and 1v1 movie picker.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0E0E10",
-  "theme_color": "#0E0E10",
+  "background_color": "#07080A",
+  "theme_color": "#07080A",
   "icons": [
     {
       "src": "/icons/icon-192.png",

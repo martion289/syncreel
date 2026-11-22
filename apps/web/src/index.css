@@ -1,8 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Space Grotesk", "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg-canvas: #07080a;
+  --bg-surface: #101216;
+  --bg-elevated: #181b22;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --ink-primary: #f5f7fa;
+  --ink-secondary: #98a0b0;
+  --ink-muted: #5c6475;
+  --accent-primary: #f5f7fa;
+  --accent-ink: #07080a;
+  --signal-positive: #22c55e;
+  --signal-danger: #f43f5e;
 }
 
 @layer base {
@@ -10,15 +26,19 @@
   body,
   #root {
     height: 100%;
-    background-color: #0e0e10;
-    color: #f4f2ee;
+    background-color: var(--bg-canvas);
+    color: var(--ink-primary);
     font-family: var(--font-sans);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
   }
 
   /* Ensure native video subtitle cues render crisply */
   video::cue {
-    background-color: rgba(14, 14, 16, 0.82);
-    color: #f4f2ee;
+    background-color: rgba(7, 8, 10, 0.85);
+    color: #f5f7fa;
     font-family: var(--font-sans);
     font-size: 1.05rem;
     line-height: 1.4;

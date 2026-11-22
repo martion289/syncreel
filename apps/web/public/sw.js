@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `syncreel-shell-${CACHE_VERSION}`;
 const SHELL_URLS = ['/', '/manifest.json', '/offline.html', '/favicon.svg', '/icons/icon-192.png'];
 

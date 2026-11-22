@@ -1,75 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="SyncReel — Self-Hosted Watch Together for Plex">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="1200" height="320" role="img" aria-label="SyncReel — Self-Hosted Watch Parties &amp; Movie Night Picker">
   <defs>
     <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0E0E10" />
-      <stop offset="60%" stop-color="#141418" />
-      <stop offset="100%" stop-color="#1A1712" />
+      <stop offset="0%" stop-color="#07080A" />
+      <stop offset="65%" stop-color="#0D0F14" />
+      <stop offset="100%" stop-color="#11141B" />
     </linearGradient>
-    <radialGradient id="amber-glow" cx="20%" cy="50%" r="48%">
-      <stop offset="0%" stop-color="#E5A00D" stop-opacity="0.22" />
-      <stop offset="100%" stop-color="#E5A00D" stop-opacity="0" />
+    <radialGradient id="silver-glow" cx="18%" cy="50%" r="48%">
+      <stop offset="0%" stop-color="#F5F7FA" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#F5F7FA" stop-opacity="0" />
     </radialGradient>
-    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F5B82E" />
-      <stop offset="100%" stop-color="#D48906" />
-    </linearGradient>
   </defs>
 
-  <!-- Outer Card -->
-  <rect x="2" y="2" width="1196" height="316" rx="24" fill="url(#bg-grad)" stroke="#2B2B33" stroke-width="2" />
-  <rect x="2" y="2" width="1196" height="316" rx="24" fill="url(#amber-glow)" />
+  <!-- Outer Frame -->
+  <rect x="2" y="2" width="1196" height="316" rx="24" fill="url(#bg-grad)" stroke="#232732" stroke-width="2" />
+  <rect x="2" y="2" width="1196" height="316" rx="24" fill="url(#silver-glow)" />
 
-  <!-- Subtle Film Perforations Top & Bottom -->
-  <g fill="#2B2B33" opacity="0.55">
-    <rect x="44" y="22" width="22" height="10" rx="3" />
-    <rect x="86" y="22" width="22" height="10" rx="3" />
-    <rect x="128" y="22" width="22" height="10" rx="3" />
-    <rect x="1050" y="22" width="22" height="10" rx="3" />
-    <rect x="1092" y="22" width="22" height="10" rx="3" />
-    <rect x="1134" y="22" width="22" height="10" rx="3" />
-
-    <rect x="44" y="288" width="22" height="10" rx="3" />
-    <rect x="86" y="288" width="22" height="10" rx="3" />
-    <rect x="128" y="288" width="22" height="10" rx="3" />
-    <rect x="1050" y="288" width="22" height="10" rx="3" />
-    <rect x="1092" y="288" width="22" height="10" rx="3" />
-    <rect x="1134" y="288" width="22" height="10" rx="3" />
-  </g>
-
-  <!-- SyncReel Reel + Play Emblem -->
-  <g transform="translate(108, 86)">
-    <rect x="0" y="0" width="148" height="148" rx="34" fill="#16161A" stroke="#E5A00D" stroke-opacity="0.55" stroke-width="2.5" />
-    <!-- Outer Sync Orbit Arcs -->
-    <circle cx="74" cy="74" r="50" fill="none" stroke="#E5A00D" stroke-width="4" stroke-dasharray="110 47" stroke-linecap="round" opacity="0.9" />
-    <circle cx="74" cy="74" r="38" fill="none" stroke="#34C77B" stroke-width="2.5" stroke-dasharray="70 50" stroke-dashoffset="35" stroke-linecap="round" opacity="0.75" />
-    <!-- Center Play Triangle -->
-    <path d="M62 51 L101 74 L62 97 Z" fill="url(#accent-grad)" />
+  <!-- Monochrome SyncReel Emblem -->
+  <g transform="translate(104, 86)">
+    <rect x="0" y="0" width="148" height="148" rx="34" fill="#101216" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="2" />
+    <circle cx="74" cy="74" r="50" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="1.5" />
+    <path d="M51 51 L86 74 L51 97 Z" fill="#98A0B0" fill-opacity="0.65" />
+    <path d="M69 51 L104 74 L69 97 Z" fill="#F5F7FA" />
   </g>
 
   <!-- Title & Tagline -->
-  <text x="292" y="138" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="62" font-weight="800" letter-spacing="-1.5" fill="#F4F2EE">
+  <text x="292" y="138" font-family="'Space Grotesk', system-ui, -apple-system, sans-serif" font-size="62" font-weight="700" letter-spacing="-1.8" fill="#F5F7FA">
     SyncReel
   </text>
-  <text x="294" y="178" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="22" font-weight="500" fill="#B8B6C2">
-    Self-Hosted Watch Together for Plex — with Zero Guest Accounts
+  <text x="294" y="178" font-family="'DM Sans', system-ui, -apple-system, sans-serif" font-size="22" font-weight="500" fill="#98A0B0">
+    Self-Hosted Watch Parties &amp; Movie Night Picker — Zero Guest Accounts
   </text>
 
   <!-- Feature Pills -->
-  <g font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="14" font-weight="600">
-    <rect x="294" y="206" width="176" height="36" rx="18" fill="#16161A" stroke="#E5A00D" stroke-opacity="0.5" stroke-width="1.5" />
-    <circle cx="316" cy="224" r="4.5" fill="#E5A00D" />
-    <text x="330" y="229" fill="#F4F2EE">Sub-Second Sync</text>
+  <g font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, monospace" font-size="13.5" font-weight="500">
+    <rect x="294" y="206" width="176" height="36" rx="18" fill="#101216" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="1.5" />
+    <circle cx="316" cy="224" r="4" fill="#F5F7FA" />
+    <text x="330" y="229" fill="#F5F7FA">Sub-Second Sync</text>
 
-    <rect x="484" y="206" width="144" height="36" rx="18" fill="#16161A" stroke="#34C77B" stroke-opacity="0.5" stroke-width="1.5" />
-    <circle cx="506" cy="224" r="4.5" fill="#34C77B" />
-    <text x="520" y="229" fill="#F4F2EE">Swipe Match</text>
+    <rect x="484" y="206" width="184" height="36" rx="18" fill="#101216" stroke="#22C55E" stroke-opacity="0.45" stroke-width="1.5" />
+    <circle cx="506" cy="224" r="4" fill="#22C55E" />
+    <text x="520" y="229" fill="#F5F7FA">Swipe + Knockout</text>
 
-    <rect x="642" y="206" width="212" height="36" rx="18" fill="#16161A" stroke="#2B2B33" stroke-width="1.5" />
-    <circle cx="664" cy="224" r="4.5" fill="#9C9AA6" />
-    <text x="678" y="229" fill="#F4F2EE">Zero Guest Accounts</text>
+    <rect x="682" y="206" width="210" height="36" rx="18" fill="#101216" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5" />
+    <circle cx="704" cy="224" r="4" fill="#98A0B0" />
+    <text x="718" y="229" fill="#F5F7FA">Zero Guest Accounts</text>
 
-    <rect x="868" y="206" width="172" height="36" rx="18" fill="#16161A" stroke="#A855F7" stroke-opacity="0.55" stroke-width="1.5" />
-    <circle cx="890" cy="224" r="4.5" fill="#A855F7" />
-    <text x="904" y="229" fill="#E9D5FF">100% Vibe-Coded</text>
+    <rect x="906" y="206" width="170" height="36" rx="18" fill="#101216" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5" />
+    <circle cx="928" cy="224" r="4" fill="#F5F7FA" />
+    <text x="942" y="229" fill="#98A0B0">100% Vibe-Coded</text>
   </g>
 </svg>

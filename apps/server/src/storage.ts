@@ -154,7 +154,7 @@ export class StateStorage {
   getSettings(): PersistedSettings {
     const s = this.cache.settings ?? {};
     return {
-      allowPlexFriends: s.allowPlexFriends ?? false,
+      allowPlexFriends: s.allowPlexFriends ?? true,
       webhookUrl: s.webhookUrl ?? '',
       webhookAutoNotify: s.webhookAutoNotify ?? false,
       defaultHostOnlyControl: s.defaultHostOnlyControl ?? this.cache.roomDefaults?.hostOnlyControl ?? false

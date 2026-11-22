@@ -725,13 +725,15 @@ export function VideoStage(props: VideoStageProps) {
       {/* Empty Stage before media is chosen */}
       {!media && (
         <div className="flex flex-col items-center justify-center text-center px-6 max-w-md">
-          <div className="w-16 h-16 rounded-2xl bg-[#16161A] border border-[#2B2B33] flex items-center justify-center mb-5 text-[#E5A00D]">
+          <div className="w-16 h-16 rounded-2xl bg-[#101216] border border-white/12 flex items-center justify-center mb-5 text-[#F5F7FA]">
             <Film className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-semibold text-[#F4F2EE] mb-2">Screening room is ready</h2>
-          <p className="text-sm text-[#9C9AA6] leading-relaxed mb-6">
+          <h2 className="font-display text-xl font-semibold text-[#F5F7FA] mb-2">
+            Screening room is ready
+          </h2>
+          <p className="text-sm text-[#98A0B0] leading-relaxed mb-6">
             {selfRole === 'host'
-              ? 'Choose a title from Plex or launch Swipe Match to pick something together.'
+              ? 'Choose a title from your library or launch Swipe Match to pick something together.'
               : 'Waiting for the host to pick a movie or start Swipe Match.'}
           </p>
           {(selfRole === 'host' || onOpenInvite) && (
@@ -739,17 +741,17 @@ export function VideoStage(props: VideoStageProps) {
               {selfRole === 'host' && onOpenLibrary && (
                 <button
                   onClick={onOpenLibrary}
-                  className="px-5 py-2.5 rounded-lg bg-[#E5A00D] text-[#111113] font-semibold text-sm hover:bg-[#f0ad1c] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                  className="px-5 py-2.5 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
-                  Browse Plex Library
+                  Browse Library
                 </button>
               )}
               {selfRole === 'host' && onOpenSwipeMatch && (
                 <button
                   onClick={onOpenSwipeMatch}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16161A] border border-[#2B2B33] text-[#F4F2EE] font-semibold text-sm hover:border-[#E5A00D] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#101216] border border-white/12 text-[#F5F7FA] font-semibold text-sm hover:border-white/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
-                  <Flame className="w-4 h-4 text-[#E5A00D]" />
+                  <Flame className="w-4 h-4" />
                   <span>Swipe Match</span>
                 </button>
               )}
@@ -757,9 +759,9 @@ export function VideoStage(props: VideoStageProps) {
                 <button
                   type="button"
                   onClick={onOpenInvite}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16161A] border border-[#2B2B33] text-[#F4F2EE] font-semibold text-sm hover:border-[#E5A00D] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#101216] border border-white/12 text-[#F5F7FA] font-semibold text-sm hover:border-white/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
-                  <Share2 className="w-4 h-4 text-[#E5A00D]" />
+                  <Share2 className="w-4 h-4" />
                   <span>Invite Friends</span>
                 </button>
               )}
@@ -798,10 +800,10 @@ export function VideoStage(props: VideoStageProps) {
 
       {/* Chromecast Active Overlay */}
       {media && isCasting && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0E0E10]/85 text-center px-6 pointer-events-none">
-          <Cast className="w-10 h-10 text-[#E5A00D] mb-3" />
-          <p className="text-base font-semibold text-[#F4F2EE]">Casting to TV</p>
-          <p className="text-sm text-[#9C9AA6] mt-1">{media.title}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#07080A]/88 text-center px-6 pointer-events-none">
+          <Cast className="w-10 h-10 text-[#F5F7FA] mb-3" />
+          <p className="font-display text-base font-semibold text-[#F5F7FA]">Casting to TV</p>
+          <p className="text-sm text-[#98A0B0] mt-1">{media.title}</p>
         </div>
       )}
 
@@ -813,21 +815,21 @@ export function VideoStage(props: VideoStageProps) {
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/75 p-4">
           {countdownNum !== null ? (
             <div className="text-center space-y-2">
-              <p className="text-xs uppercase tracking-[0.25em] text-[#E5A00D] font-semibold">
+              <p className="text-xs uppercase tracking-[0.25em] text-[#98A0B0] font-semibold">
                 Starting Together
               </p>
-              <div className="text-7xl font-bold font-mono text-[#F4F2EE] tabular-nums">
+              <div className="text-7xl font-bold font-mono text-[#F5F7FA] tabular-nums">
                 {countdownNum}
               </div>
             </div>
           ) : (
-            <div className="w-full max-w-sm rounded-2xl bg-[#16161A] border border-[#2B2B33] p-5 space-y-4 shadow-2xl">
+            <div className="w-full max-w-sm rounded-2xl bg-[#101216] border border-white/12 p-5 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-bold text-[#F4F2EE]">
-                  <Users className="w-4 h-4 text-[#E5A00D]" />
+                <div className="flex items-center gap-2 text-sm font-bold text-[#F5F7FA]">
+                  <Users className="w-4 h-4" />
                   <span>Ready Check</span>
                 </div>
-                <span className="font-mono text-xs text-[#9C9AA6]">
+                <span className="font-mono text-xs text-[#98A0B0]">
                   {readyCheck.readyParticipantIds.length}/{participants.length}
                 </span>
               </div>
@@ -838,10 +840,10 @@ export function VideoStage(props: VideoStageProps) {
                   return (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#0E0E10] border border-[#2B2B33] text-xs"
+                      className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#07080A] border border-white/10 text-xs"
                     >
-                      <span className="text-[#F4F2EE] font-medium">{p.name}</span>
-                      <span className={rdy ? 'text-[#34C77B] font-semibold' : 'text-[#686670]'}>
+                      <span className="text-[#F5F7FA] font-medium">{p.name}</span>
+                      <span className={rdy ? 'text-[#22C55E] font-semibold' : 'text-[#5C6475]'}>
                         {rdy ? 'Ready ✓' : 'Waiting…'}
                       </span>
                     </div>
@@ -854,8 +856,8 @@ export function VideoStage(props: VideoStageProps) {
                   onClick={() => sendEvent({ type: 'ready:ack', ready: !selfIsReady })}
                   className={`w-full py-2.5 rounded-xl text-sm font-semibold transition ${
                     selfIsReady
-                      ? 'bg-[#34C77B]/20 border border-[#34C77B] text-[#34C77B]'
-                      : 'bg-[#E5A00D] text-[#111113] hover:bg-[#f0ad1c]'
+                      ? 'bg-[#22C55E]/15 border border-[#22C55E] text-[#22C55E]'
+                      : 'bg-[#F5F7FA] text-[#07080A] hover:bg-white'
                   }`}
                 >
                   {selfIsReady ? (
@@ -871,13 +873,13 @@ export function VideoStage(props: VideoStageProps) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => sendEvent({ type: 'ready:launchNow' })}
-                      className="flex-1 py-1.5 rounded-lg bg-[#202026] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D]"
+                      className="flex-1 py-1.5 rounded-lg bg-[#181B22] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30"
                     >
                       Start Anyway (3-2-1)
                     </button>
                     <button
                       onClick={() => sendEvent({ type: 'ready:cancel' })}
-                      className="px-3 py-1.5 rounded-lg bg-[#202026] text-xs text-[#9C9AA6] hover:text-[#F4F2EE]"
+                      className="px-3 py-1.5 rounded-lg bg-[#181B22] border border-white/10 text-xs text-[#98A0B0] hover:text-[#F5F7FA]"
                     >
                       Cancel
                     </button>
@@ -893,14 +895,14 @@ export function VideoStage(props: VideoStageProps) {
       {media && (streamLoading || streamError) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 pointer-events-none">
           {streamError ? (
-            <div className="bg-[#16161A] border border-[#D94848]/50 text-[#F4F2EE] px-5 py-4 rounded-xl max-w-sm text-center pointer-events-auto">
-              <p className="text-sm font-medium text-[#D94848] mb-1">Stream Error</p>
-              <p className="text-xs text-[#9C9AA6]">{streamError}</p>
+            <div className="bg-[#101216] border border-[#F43F5E]/40 text-[#F5F7FA] px-5 py-4 rounded-xl max-w-sm text-center pointer-events-auto">
+              <p className="text-sm font-medium text-[#F43F5E] mb-1">Stream Error</p>
+              <p className="text-xs text-[#98A0B0]">{streamError}</p>
             </div>
           ) : (
-            <div className="flex items-center gap-2.5 bg-[#16161A]/95 border border-[#2B2B33] px-4 py-2.5 rounded-full text-sm text-[#F4F2EE]">
-              <Loader2 className="w-4 h-4 animate-spin text-[#E5A00D]" />
-              <span>Preparing Plex stream…</span>
+            <div className="flex items-center gap-2.5 bg-[#101216]/95 border border-white/12 px-4 py-2.5 rounded-full text-sm text-[#F5F7FA]">
+              <Loader2 className="w-4 h-4 animate-spin text-[#F5F7FA]" />
+              <span>Preparing stream…</span>
             </div>
           )}
         </div>
@@ -911,7 +913,7 @@ export function VideoStage(props: VideoStageProps) {
         <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
           <button
             onClick={() => void resumeAfterAutoplayBlock()}
-            className="flex items-center gap-3 px-6 py-3.5 rounded-full bg-[#E5A00D] text-[#111113] font-semibold text-base shadow-lg hover:bg-[#f0ad1c] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="flex items-center gap-3 px-6 py-3.5 rounded-full bg-[#F5F7FA] text-[#07080A] font-semibold text-base hover:bg-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <Play className="w-5 h-5 fill-current" />
             <span>Tap to Join Synced Playback</span>
@@ -921,8 +923,8 @@ export function VideoStage(props: VideoStageProps) {
 
       {/* Buffering Barrier Status */}
       {media && playback.status === 'buffering' && bufferingNames.length > 0 && (
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#16161A]/95 border border-[#E5A00D]/40 text-xs font-medium text-[#F4F2EE]">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#E5A00D]" />
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#101216]/95 border border-white/15 text-xs font-medium text-[#F5F7FA]">
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#F5F7FA]" />
           <span>Waiting for {bufferingNames.join(', ')} to buffer…</span>
         </div>
       )}
@@ -940,7 +942,7 @@ export function VideoStage(props: VideoStageProps) {
                   markerType: 'intro'
                 })
               }
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#16161A]/95 border border-[#E5A00D] text-[#F4F2EE] text-sm font-semibold hover:bg-[#E5A00D] hover:text-[#111113] disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#101216]/95 border border-white/25 text-[#F5F7FA] text-sm font-semibold hover:bg-[#F5F7FA] hover:text-[#07080A] disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               <SkipForward className="w-4 h-4" />
               <span>Skip Intro</span>
@@ -950,7 +952,7 @@ export function VideoStage(props: VideoStageProps) {
             <button
               disabled={!canControl}
               onClick={() => sendEvent({ type: 'room:queueNext' })}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E5A00D] text-[#111113] text-sm font-semibold hover:bg-[#f0ad1c] disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F5F7FA] text-[#07080A] text-sm font-semibold hover:bg-white disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <SkipForward className="w-4 h-4" />
               <span>{hasNextInQueue ? 'Play Up Next' : 'Next Episode'}</span>
@@ -967,10 +969,10 @@ export function VideoStage(props: VideoStageProps) {
           }`}
         >
           <div className="min-w-0">
-            <h2 className="text-sm sm:text-base font-semibold text-[#F4F2EE] truncate">
+            <h2 className="font-display text-sm sm:text-base font-semibold text-[#F5F7FA] truncate">
               {media.title}
             </h2>
-            <p className="text-xs text-[#9C9AA6] truncate">{formatMediaSubtitle(media)}</p>
+            <p className="text-xs text-[#98A0B0] truncate">{formatMediaSubtitle(media)}</p>
           </div>
           <div className="flex items-center gap-2 pointer-events-auto">
             {isPreviewGuest && (
@@ -986,13 +988,13 @@ export function VideoStage(props: VideoStageProps) {
                     sendEvent({ type: 'player:buffering', isBuffering: false });
                   }, 4000);
                 }}
-                className="text-[11px] px-2 py-0.5 rounded bg-[#202026]/90 border border-[#E5A00D]/50 text-[#E5A00D] hover:bg-[#E5A00D] hover:text-[#111113] transition"
+                className="text-[11px] px-2 py-0.5 rounded bg-[#181B22]/90 border border-white/20 text-[#F5F7FA] hover:bg-[#F5F7FA] hover:text-[#07080A] transition"
               >
                 {simulatingBuffer ? 'Buffering (4s)…' : 'Sim 4s Buffer'}
               </button>
             )}
             {streamMode === 'eco-shared' && (
-              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-[#16161A]/85 border border-[#34C77B]/40 text-[#34C77B]">
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-[#101216]/85 border border-[#22C55E]/40 text-[#22C55E]">
                 <Leaf className="w-3 h-3" />
                 Eco
               </span>
@@ -1001,16 +1003,16 @@ export function VideoStage(props: VideoStageProps) {
               <span
                 className={`font-mono text-[11px] px-2 py-0.5 rounded border tabular-nums ${
                   Math.abs(driftMs) < 180
-                    ? 'bg-[#16161A]/85 border-[#34C77B]/40 text-[#34C77B]'
-                    : 'bg-[#16161A]/85 border-[#E5A00D]/40 text-[#E5A00D]'
+                    ? 'bg-[#101216]/85 border-[#22C55E]/40 text-[#22C55E]'
+                    : 'bg-[#101216]/85 border-white/25 text-[#F5F7FA]'
                 }`}
               >
                 {driftMs >= 0 ? `+${driftMs}ms` : `${driftMs}ms`}
               </span>
             )}
             {hostOnlyControl && (
-              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-[#16161A]/85 border border-[#2B2B33] text-[#9C9AA6]">
-                <Lock className="w-3 h-3 text-[#E5A00D]" />
+              <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-[#101216]/85 border border-white/10 text-[#98A0B0]">
+                <Lock className="w-3 h-3 text-[#F5F7FA]" />
                 Host Lock
               </span>
             )}
@@ -1020,19 +1022,19 @@ export function VideoStage(props: VideoStageProps) {
 
       {/* Track, Quality & Subtitle Styling Popover */}
       {media && settingsOpen && (
-        <div className="absolute bottom-20 right-4 z-30 w-76 max-h-[68vh] overflow-y-auto rounded-xl bg-[#16161A] border border-[#2B2B33] p-4 shadow-2xl space-y-4">
+        <div className="absolute bottom-20 right-4 z-30 w-76 max-h-[68vh] overflow-y-auto rounded-xl bg-[#101216] border border-white/12 p-4 space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6]">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0]">
                 {streamMode === 'eco-shared' ? 'Shared Eco Quality' : 'Quality'}
               </p>
               {streamMode === 'eco-shared' && (
-                <span className="text-[10px] text-[#34C77B]">1x Shared Transcode</span>
+                <span className="text-[10px] text-[#22C55E]">1x Shared Transcode</span>
               )}
             </div>
 
             {streamMode === 'eco-shared' && selfRole !== 'host' ? (
-              <p className="text-xs text-[#9C9AA6] px-2 py-1.5 rounded bg-[#0E0E10]">
+              <p className="text-xs text-[#98A0B0] px-2 py-1.5 rounded bg-[#07080A]">
                 Locked to {QUALITY_PRESETS[ecoQuality].shortLabel} (Eco mode managed by host)
               </p>
             ) : (
@@ -1053,10 +1055,10 @@ export function VideoStage(props: VideoStageProps) {
                           setQuality(presetKey);
                         }
                       }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                         active
-                          ? 'bg-[#E5A00D] text-[#111113] font-semibold'
-                          : 'text-[#F4F2EE] hover:bg-[#202026]'
+                          ? 'bg-[#F5F7FA] text-[#07080A] font-semibold'
+                          : 'text-[#F5F7FA] hover:bg-[#181B22]'
                       }`}
                     >
                       {preset.label}
@@ -1069,7 +1071,7 @@ export function VideoStage(props: VideoStageProps) {
 
           {audioStreams.length > 0 && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6] mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0] mb-2">
                 Audio Track
               </p>
               <div className="space-y-1">
@@ -1079,10 +1081,10 @@ export function VideoStage(props: VideoStageProps) {
                     <button
                       key={a.id}
                       onClick={() => setAudioStreamId(a.id)}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                         active
-                          ? 'bg-[#E5A00D] text-[#111113] font-semibold'
-                          : 'text-[#F4F2EE] hover:bg-[#202026]'
+                          ? 'bg-[#F5F7FA] text-[#07080A] font-semibold'
+                          : 'text-[#F5F7FA] hover:bg-[#181B22]'
                       }`}
                     >
                       {a.displayTitle}
@@ -1095,7 +1097,7 @@ export function VideoStage(props: VideoStageProps) {
 
           {subtitleStreams.length > 0 && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6] mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0] mb-2">
                 Subtitles
               </p>
               <div className="space-y-1">
@@ -1104,10 +1106,10 @@ export function VideoStage(props: VideoStageProps) {
                     setActiveTextSubId(null);
                     setBurnInSubtitleId(undefined);
                   }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                     activeTextSubId === null && !burnInSubtitleId
-                      ? 'bg-[#E5A00D] text-[#111113] font-semibold'
-                      : 'text-[#F4F2EE] hover:bg-[#202026]'
+                      ? 'bg-[#F5F7FA] text-[#07080A] font-semibold'
+                      : 'text-[#F5F7FA] hover:bg-[#181B22]'
                   }`}
                 >
                   Off
@@ -1130,17 +1132,17 @@ export function VideoStage(props: VideoStageProps) {
                           setBurnInSubtitleId(sub.id);
                         }
                       }}
-                      className={`w-full flex items-center justify-between gap-2 text-left px-2.5 py-1.5 rounded-lg text-xs transition disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                      className={`w-full flex items-center justify-between gap-2 text-left px-2.5 py-1.5 rounded-lg text-xs transition disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                         isActive
-                          ? 'bg-[#E5A00D] text-[#111113] font-semibold'
-                          : 'text-[#F4F2EE] hover:bg-[#202026]'
+                          ? 'bg-[#F5F7FA] text-[#07080A] font-semibold'
+                          : 'text-[#F5F7FA] hover:bg-[#181B22]'
                       }`}
                     >
                       <span className="truncate">{sub.displayTitle}</span>
                       {sub.requiresBurnIn && (
                         <span
                           className={`text-[10px] px-1.5 py-0.5 rounded ${
-                            isActive ? 'bg-black/20 text-[#111113]' : 'bg-[#202026] text-[#9C9AA6]'
+                            isActive ? 'bg-black/20 text-[#07080A]' : 'bg-[#181B22] text-[#98A0B0]'
                           }`}
                         >
                           Burn-in
@@ -1154,9 +1156,9 @@ export function VideoStage(props: VideoStageProps) {
           )}
 
           {/* Subtitle Appearance & Sync Offset */}
-          <div className="pt-3 border-t border-[#2B2B33] space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6]">
-              Subtitle Style & Timing
+          <div className="pt-3 border-t border-white/8 space-y-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0]">
+              Subtitle Style &amp; Timing
             </p>
             <div className="grid grid-cols-4 gap-1">
               {(['small', 'medium', 'large', 'xlarge'] as SubtitleSizePreset[]).map((sz) => (
@@ -1165,8 +1167,8 @@ export function VideoStage(props: VideoStageProps) {
                   onClick={() => setSubStyle((prev) => ({ ...prev, size: sz }))}
                   className={`py-1 rounded text-[11px] capitalize ${
                     subStyle.size === sz
-                      ? 'bg-[#E5A00D] text-[#111113] font-semibold'
-                      : 'bg-[#0E0E10] text-[#9C9AA6]'
+                      ? 'bg-[#F5F7FA] text-[#07080A] font-semibold'
+                      : 'bg-[#07080A] text-[#98A0B0]'
                   }`}
                 >
                   {sz === 'xlarge' ? 'XL' : sz[0].toUpperCase()}
@@ -1174,7 +1176,7 @@ export function VideoStage(props: VideoStageProps) {
               ))}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-[#9C9AA6]">
+            <div className="flex items-center justify-between text-[11px] text-[#98A0B0]">
               <span>Background</span>
               <div className="flex gap-1">
                 {([0, 0.5, 0.82] as const).map((op) => (
@@ -1183,8 +1185,8 @@ export function VideoStage(props: VideoStageProps) {
                     onClick={() => setSubStyle((prev) => ({ ...prev, bgOpacity: op }))}
                     className={`px-2 py-0.5 rounded ${
                       subStyle.bgOpacity === op
-                        ? 'bg-[#E5A00D] text-[#111113] font-semibold'
-                        : 'bg-[#0E0E10] text-[#9C9AA6]'
+                        ? 'bg-[#F5F7FA] text-[#07080A] font-semibold'
+                        : 'bg-[#07080A] text-[#98A0B0]'
                     }`}
                   >
                     {op === 0 ? 'None' : op === 0.5 ? 'Soft' : 'Dark'}
@@ -1194,9 +1196,9 @@ export function VideoStage(props: VideoStageProps) {
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-[11px] text-[#9C9AA6] mb-1">
+              <div className="flex items-center justify-between text-[11px] text-[#98A0B0] mb-1">
                 <span>Sync Offset</span>
-                <span className="font-mono text-[#F4F2EE]">
+                <span className="font-mono text-[#F5F7FA]">
                   {subStyle.offsetMs >= 0 ? `+${subStyle.offsetMs}ms` : `${subStyle.offsetMs}ms`}
                 </span>
               </div>
@@ -1208,7 +1210,7 @@ export function VideoStage(props: VideoStageProps) {
                       offsetMs: Math.max(-5000, prev.offsetMs - 250)
                     }))
                   }
-                  className="px-2 py-1 rounded bg-[#0E0E10] text-[10px] font-mono text-[#F4F2EE]"
+                  className="px-2 py-1 rounded bg-[#07080A] text-[10px] font-mono text-[#F5F7FA]"
                 >
                   -250
                 </button>
@@ -1221,7 +1223,7 @@ export function VideoStage(props: VideoStageProps) {
                   onChange={(e) =>
                     setSubStyle((prev) => ({ ...prev, offsetMs: Number(e.target.value) }))
                   }
-                  className="flex-1 accent-[#E5A00D]"
+                  className="flex-1 accent-[#F5F7FA]"
                 />
                 <button
                   onClick={() =>
@@ -1230,7 +1232,7 @@ export function VideoStage(props: VideoStageProps) {
                       offsetMs: Math.min(5000, prev.offsetMs + 250)
                     }))
                   }
-                  className="px-2 py-1 rounded bg-[#0E0E10] text-[10px] font-mono text-[#F4F2EE]"
+                  className="px-2 py-1 rounded bg-[#07080A] text-[10px] font-mono text-[#F5F7FA]"
                 >
                   +250
                 </button>
@@ -1242,7 +1244,7 @@ export function VideoStage(props: VideoStageProps) {
 
       {/* Fullscreen / Theater Quick Chat & Emoji Bar */}
       {media && quickChatOpen && (
-        <div className="absolute bottom-20 right-4 left-4 sm:left-auto sm:w-[360px] z-30 rounded-2xl bg-[#121216]/92 backdrop-blur-md border border-[#2B2B33] p-2.5 shadow-2xl space-y-2">
+        <div className="absolute bottom-20 right-4 left-4 sm:left-auto sm:w-[360px] z-30 rounded-2xl bg-[#101216]/94 backdrop-blur-md border border-white/12 p-2.5 space-y-2">
           <div className="flex items-center justify-between gap-1">
             <div className="flex items-center gap-0.5 flex-1">
               {QUICK_CHAT_EMOJIS.map((emoji) => (
@@ -1251,7 +1253,7 @@ export function VideoStage(props: VideoStageProps) {
                   type="button"
                   onClick={() => sendEvent({ type: 'chat:react', emoji })}
                   aria-label={`React ${emoji}`}
-                  className="flex-1 py-1 rounded-lg text-base hover:bg-white/10 active:scale-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                  className="flex-1 py-1 rounded-lg text-base hover:bg-white/10 active:scale-90 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
                   {emoji}
                 </button>
@@ -1264,8 +1266,8 @@ export function VideoStage(props: VideoStageProps) {
                 onClick={onToggleFloatingOverlay}
                 className={`px-2 py-1 rounded-lg text-[10px] font-semibold border whitespace-nowrap transition ${
                   floatingOverlayEnabled
-                    ? 'bg-[#E5A00D]/15 border-[#E5A00D]/50 text-[#E5A00D]'
-                    : 'bg-[#0E0E10] border-[#2B2B33] text-[#9C9AA6] hover:text-[#F4F2EE]'
+                    ? 'bg-white/10 border-white/25 text-[#F5F7FA]'
+                    : 'bg-[#07080A] border-white/10 text-[#98A0B0] hover:text-[#F5F7FA]'
                 }`}
               >
                 {floatingOverlayEnabled ? 'On-screen: On' : 'On-screen: Off'}
@@ -1296,13 +1298,13 @@ export function VideoStage(props: VideoStageProps) {
               }}
               maxLength={500}
               placeholder={isSelfMuted ? 'Muted by host…' : 'Send floating message…'}
-              className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs text-[#F4F2EE] placeholder-[#686670] disabled:opacity-50 focus:outline-none focus:border-[#E5A00D]"
+              className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-[#07080A] border border-white/10 text-xs text-[#F5F7FA] placeholder-[#5C6475] disabled:opacity-50 focus:outline-none focus:border-white/30"
             />
             <button
               type="submit"
               disabled={isSelfMuted || !quickDraft.trim()}
               aria-label="Send floating message"
-              className="p-2 rounded-xl bg-[#E5A00D] text-[#111113] hover:bg-[#f0ad1c] disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+              className="p-2 rounded-xl bg-[#F5F7FA] text-[#07080A] hover:bg-white disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               <Send className="w-3.5 h-3.5" />
             </button>
@@ -1327,14 +1329,14 @@ export function VideoStage(props: VideoStageProps) {
                     <div
                       key={`${m.type}-${idx}`}
                       style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                      className="absolute inset-y-0 bg-[#E5A00D]/55"
+                      className="absolute inset-y-0 bg-white/45"
                       title={m.type === 'intro' ? 'Intro' : 'Credits'}
                     />
                   );
                 })}
               <div
                 style={{ width: `${progressPct}%` }}
-                className="absolute inset-y-0 left-0 bg-[#E5A00D]"
+                className="absolute inset-y-0 left-0 bg-[#F5F7FA]"
               />
             </div>
             <input
@@ -1360,7 +1362,7 @@ export function VideoStage(props: VideoStageProps) {
                 onClick={togglePlayPause}
                 disabled={!canControl}
                 aria-label={playback.status === 'playing' ? 'Pause' : 'Play'}
-                className="p-2 rounded-lg text-[#F4F2EE] hover:bg-white/10 disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                className="p-2 rounded-lg text-[#F5F7FA] hover:bg-white/10 disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 {playback.status === 'playing' ? (
                   <Pause className="w-5 h-5 fill-current" />
@@ -1373,7 +1375,7 @@ export function VideoStage(props: VideoStageProps) {
                 onClick={() => seekBy(-10_000)}
                 disabled={!canControl}
                 aria-label="Rewind 10 seconds"
-                className="p-2 rounded-lg text-[#F4F2EE] hover:bg-white/10 disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                className="p-2 rounded-lg text-[#F5F7FA] hover:bg-white/10 disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -1382,7 +1384,7 @@ export function VideoStage(props: VideoStageProps) {
                 onClick={() => seekBy(10_000)}
                 disabled={!canControl}
                 aria-label="Fast-forward 10 seconds"
-                className="p-2 rounded-lg text-[#F4F2EE] hover:bg-white/10 disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                className="p-2 rounded-lg text-[#F5F7FA] hover:bg-white/10 disabled:opacity-40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 <RotateCw className="w-4 h-4" />
               </button>
@@ -1391,7 +1393,7 @@ export function VideoStage(props: VideoStageProps) {
                 <button
                   onClick={toggleMute}
                   aria-label={isMuted ? 'Unmute' : 'Mute'}
-                  className="p-2 rounded-lg text-[#F4F2EE] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                  className="p-2 rounded-lg text-[#F5F7FA] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
                   {isMuted || volume === 0 ? (
                     <VolumeX className="w-4 h-4" />
@@ -1415,12 +1417,12 @@ export function VideoStage(props: VideoStageProps) {
                       setIsMuted(next === 0);
                     }
                   }}
-                  className="w-16 accent-[#E5A00D] cursor-pointer"
+                  className="w-16 accent-[#F5F7FA] cursor-pointer"
                 />
               </div>
 
-              <span className="font-mono text-xs text-[#9C9AA6] tabular-nums ml-1">
-                <span className="text-[#F4F2EE]">{formatTimeMs(displayPosMs)}</span>
+              <span className="font-mono text-xs text-[#98A0B0] tabular-nums ml-1">
+                <span className="text-[#F5F7FA]">{formatTimeMs(displayPosMs)}</span>
                 {' / '}
                 {formatTimeMs(durationMs)}
               </span>
@@ -1431,10 +1433,10 @@ export function VideoStage(props: VideoStageProps) {
                 <button
                   onClick={cycleCaptions}
                   aria-label="Toggle captions"
-                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                     activeTextSubId !== null
-                      ? 'text-[#E5A00D] bg-[#E5A00D]/15'
-                      : 'text-[#F4F2EE] hover:bg-white/10'
+                      ? 'text-[#07080A] bg-[#F5F7FA]'
+                      : 'text-[#F5F7FA] hover:bg-white/10'
                   }`}
                 >
                   <Captions className="w-4 h-4" />
@@ -1445,7 +1447,7 @@ export function VideoStage(props: VideoStageProps) {
                 <button
                   onClick={() => void togglePip()}
                   aria-label="Picture in Picture"
-                  className="p-2 rounded-lg text-[#F4F2EE] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                  className="p-2 rounded-lg text-[#F5F7FA] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 >
                   <PictureInPicture2 className="w-4 h-4" />
                 </button>
@@ -1455,10 +1457,10 @@ export function VideoStage(props: VideoStageProps) {
                 <button
                   onClick={showAirPlayPicker}
                   aria-label="AirPlay to TV"
-                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                     isAirPlayActive
-                      ? 'text-[#E5A00D] bg-[#E5A00D]/15'
-                      : 'text-[#F4F2EE] hover:bg-white/10'
+                      ? 'text-[#07080A] bg-[#F5F7FA]'
+                      : 'text-[#F5F7FA] hover:bg-white/10'
                   }`}
                 >
                   <Airplay className="w-4 h-4" />
@@ -1469,10 +1471,10 @@ export function VideoStage(props: VideoStageProps) {
                 <button
                   onClick={() => void startOrStopCast()}
                   aria-label="Cast to Chromecast"
-                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                     isCasting
-                      ? 'text-[#E5A00D] bg-[#E5A00D]/15'
-                      : 'text-[#F4F2EE] hover:bg-white/10'
+                      ? 'text-[#07080A] bg-[#F5F7FA]'
+                      : 'text-[#F5F7FA] hover:bg-white/10'
                   }`}
                 >
                   <Cast className="w-4 h-4" />
@@ -1490,10 +1492,10 @@ export function VideoStage(props: VideoStageProps) {
                     })
                   }
                   aria-label={quickChatOpen ? 'Hide quick chat' : 'Quick chat and emojis'}
-                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                  className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                     quickChatOpen
-                      ? 'text-[#E5A00D] bg-[#E5A00D]/15'
-                      : 'text-[#F4F2EE] hover:bg-white/10'
+                      ? 'text-[#07080A] bg-[#F5F7FA]'
+                      : 'text-[#F5F7FA] hover:bg-white/10'
                   }`}
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -1509,10 +1511,10 @@ export function VideoStage(props: VideoStageProps) {
                   })
                 }
                 aria-label="Quality and tracks"
-                className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+                className={`p-2 rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                   settingsOpen
-                    ? 'text-[#E5A00D] bg-[#E5A00D]/15'
-                    : 'text-[#F4F2EE] hover:bg-white/10'
+                    ? 'text-[#07080A] bg-[#F5F7FA]'
+                    : 'text-[#F5F7FA] hover:bg-white/10'
                 }`}
               >
                 <Settings2 className="w-4 h-4" />
@@ -1521,7 +1523,7 @@ export function VideoStage(props: VideoStageProps) {
               <button
                 onClick={onToggleSidebar}
                 aria-label={isSidebarOpen ? 'Hide sidebar (Theater Mode)' : 'Show sidebar'}
-                className="hidden lg:inline-flex p-2 rounded-lg text-[#F4F2EE] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                className="hidden lg:inline-flex p-2 rounded-lg text-[#F5F7FA] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 {isSidebarOpen ? (
                   <PanelRightClose className="w-4 h-4" />
@@ -1533,7 +1535,7 @@ export function VideoStage(props: VideoStageProps) {
               <button
                 onClick={() => void toggleFullscreen()}
                 aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                className="p-2 rounded-lg text-[#F4F2EE] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                className="p-2 rounded-lg text-[#F5F7FA] hover:bg-white/10 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
               </button>

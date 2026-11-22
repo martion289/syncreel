@@ -95,16 +95,18 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-6">
-      <div className="w-full max-w-4xl max-h-[88vh] flex flex-col rounded-2xl bg-[#16161A] border border-[#2B2B33] shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#2B2B33]">
+      <div className="w-full max-w-4xl max-h-[88vh] flex flex-col rounded-2xl bg-[#101216] border border-white/12 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
           <div className="flex items-center gap-2.5">
-            <Shield className="w-4 h-4 text-[#E5A00D]" />
-            <h2 className="text-base font-semibold text-[#F4F2EE]">SyncReel Server Admin</h2>
+            <Shield className="w-4 h-4 text-[#F5F7FA]" />
+            <h2 className="font-display text-base font-semibold text-[#F5F7FA]">
+              SyncReel Server Admin
+            </h2>
           </div>
           <button
             onClick={onClose}
             aria-label="Close admin panel"
-            className="p-2 rounded-lg text-[#9C9AA6] hover:text-[#F4F2EE] hover:bg-[#202026] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+            className="p-2 rounded-lg text-[#98A0B0] hover:text-[#F5F7FA] hover:bg-[#181B22] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
           >
             <X className="w-5 h-5" />
           </button>
@@ -112,19 +114,19 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           {loading && !overview ? (
-            <div className="py-12 flex items-center justify-center gap-2 text-sm text-[#9C9AA6]">
-              <Loader2 className="w-4 h-4 animate-spin text-[#E5A00D]" />
+            <div className="py-12 flex items-center justify-center gap-2 text-sm text-[#98A0B0]">
+              <Loader2 className="w-4 h-4 animate-spin text-[#F5F7FA]" />
               <span>Loading server overview…</span>
             </div>
           ) : (
             <>
               {error && (
-                <div className="p-3 rounded-xl bg-[#D94848]/10 border border-[#D94848]/40 text-xs text-[#D94848]">
+                <div className="p-3 rounded-xl bg-[#F43F5E]/10 border border-[#F43F5E]/30 text-xs text-[#F43F5E]">
                   {error}
                 </div>
               )}
               {notice && (
-                <div className="p-3 rounded-xl bg-[#34C77B]/10 border border-[#34C77B]/40 text-xs text-[#34C77B] flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-[#22C55E]/10 border border-[#22C55E]/30 text-xs text-[#22C55E] flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{notice}</span>
                 </div>
@@ -133,65 +135,67 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
               {/* Settings Form */}
               <form
                 onSubmit={handleSave}
-                className="rounded-xl bg-[#0E0E10] border border-[#2B2B33] p-4 space-y-4"
+                className="rounded-xl bg-[#07080A] border border-white/10 p-4 space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9C9AA6]">
-                    Server & Permissions
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#98A0B0]">
+                    Server &amp; Permissions
                   </h3>
-                  <span className="text-[11px] text-[#34C77B]">
+                  <span className="text-[11px] text-[#22C55E]">
                     {overview?.settings.serverName}
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-[#9C9AA6] mb-1">
-                    Plex Server URL
+                  <label className="block text-xs font-medium text-[#98A0B0] mb-1">
+                    Media Server URL
                   </label>
                   <input
                     type="url"
                     required
                     value={plexUrl}
                     onChange={(e) => setPlexUrl(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[#16161A] border border-[#2B2B33] text-xs font-mono text-[#F4F2EE] focus:outline-none focus:border-[#E5A00D]"
+                    className="w-full px-3 py-2 rounded-lg bg-[#101216] border border-white/10 text-xs font-mono text-[#F5F7FA] focus:outline-none focus:border-white/30"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label className="flex items-start gap-2.5 p-3 rounded-lg bg-[#16161A] border border-[#2B2B33] cursor-pointer">
+                  <label className="flex items-start gap-2.5 p-3 rounded-lg bg-[#101216] border border-white/10 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={allowPlexFriends}
                       onChange={(e) => setAllowPlexFriends(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 accent-[#E5A00D]"
+                      className="mt-0.5 w-4 h-4 accent-[#F5F7FA]"
                     />
                     <div>
-                      <p className="text-xs font-medium text-[#F4F2EE]">Allow Plex Friends to Host</p>
-                      <p className="text-[11px] text-[#9C9AA6]">
-                        Shared Plex users can sign in and host rooms with their library permissions
+                      <p className="text-xs font-medium text-[#F5F7FA]">
+                        Allow Shared Library Friends to Host
+                      </p>
+                      <p className="text-[11px] text-[#98A0B0]">
+                        Shared library users can sign in and host rooms with their library permissions
                       </p>
                     </div>
                   </label>
 
-                  <label className="flex items-start gap-2.5 p-3 rounded-lg bg-[#16161A] border border-[#2B2B33] cursor-pointer">
+                  <label className="flex items-start gap-2.5 p-3 rounded-lg bg-[#101216] border border-white/10 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={defaultHostOnlyControl}
                       onChange={(e) => setDefaultHostOnlyControl(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 accent-[#E5A00D]"
+                      className="mt-0.5 w-4 h-4 accent-[#F5F7FA]"
                     />
                     <div>
-                      <p className="text-xs font-medium text-[#F4F2EE]">Default Host-Only Lock</p>
-                      <p className="text-[11px] text-[#9C9AA6]">
+                      <p className="text-xs font-medium text-[#F5F7FA]">Default Host-Only Lock</p>
+                      <p className="text-[11px] text-[#98A0B0]">
                         New rooms start with guest play/pause/seek locked
                       </p>
                     </div>
                   </label>
                 </div>
 
-                <div className="space-y-2 pt-2 border-t border-[#2B2B33]">
-                  <div className="flex items-center gap-2 text-xs font-medium text-[#F4F2EE]">
-                    <Bell className="w-3.5 h-3.5 text-[#E5A00D]" />
+                <div className="space-y-2 pt-2 border-t border-white/8">
+                  <div className="flex items-center gap-2 text-xs font-medium text-[#F5F7FA]">
+                    <Bell className="w-3.5 h-3.5" />
                     <span>Discord / Generic Webhook</span>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -200,23 +204,23 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
                       value={webhookUrl}
                       onChange={(e) => setWebhookUrl(e.target.value)}
                       placeholder="https://discord.com/api/webhooks/..."
-                      className="flex-1 px-3 py-2 rounded-lg bg-[#16161A] border border-[#2B2B33] text-xs text-[#F4F2EE] placeholder-[#686670] focus:outline-none focus:border-[#E5A00D]"
+                      className="flex-1 px-3 py-2 rounded-lg bg-[#101216] border border-white/10 text-xs text-[#F5F7FA] placeholder-[#5C6475] focus:outline-none focus:border-white/30"
                     />
                     <button
                       type="button"
                       disabled={!webhookUrl.trim() || testingWebhook}
                       onClick={() => void handleTestWebhook()}
-                      className="px-3 py-2 rounded-lg bg-[#202026] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D] disabled:opacity-50"
+                      className="px-3 py-2 rounded-lg bg-[#181B22] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 disabled:opacity-50"
                     >
                       {testingWebhook ? 'Sending…' : 'Send Test'}
                     </button>
                   </div>
-                  <label className="flex items-center gap-2 text-xs text-[#9C9AA6] cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-[#98A0B0] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={webhookAutoNotify}
                       onChange={(e) => setWebhookAutoNotify(e.target.checked)}
-                      className="w-4 h-4 accent-[#E5A00D]"
+                      className="w-4 h-4 accent-[#F5F7FA]"
                     />
                     <span>Auto-post webhook notification whenever a movie or episode loads</span>
                   </label>
@@ -226,7 +230,7 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E5A00D] text-[#111113] text-xs font-semibold hover:bg-[#f0ad1c] disabled:opacity-60"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F5F7FA] text-[#07080A] text-xs font-semibold hover:bg-white disabled:opacity-60"
                   >
                     <Save className="w-3.5 h-3.5" />
                     <span>{saving ? 'Saving…' : 'Save Settings'}</span>
@@ -235,31 +239,31 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
               </form>
 
               {/* Active Rooms */}
-              <div className="rounded-xl bg-[#0E0E10] border border-[#2B2B33] p-4 space-y-3">
+              <div className="rounded-xl bg-[#07080A] border border-white/10 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9C9AA6]">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#98A0B0]">
                     Active Screening Rooms ({overview?.rooms.length ?? 0})
                   </h3>
-                  <button onClick={load} className="text-[11px] text-[#E5A00D] hover:underline">
+                  <button onClick={load} className="text-[11px] text-[#F5F7FA] hover:underline">
                     Refresh
                   </button>
                 </div>
 
                 {overview && overview.rooms.length === 0 ? (
-                  <p className="text-xs text-[#686670]">No active rooms right now.</p>
+                  <p className="text-xs text-[#5C6475]">No active rooms right now.</p>
                 ) : (
                   <div className="space-y-2">
                     {overview?.rooms.map((r) => (
                       <div
                         key={r.code}
-                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-[#16161A] border border-[#2B2B33]"
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-[#101216] border border-white/10"
                       >
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-[#F4F2EE] truncate">
+                          <p className="text-xs font-semibold text-[#F5F7FA] truncate">
                             {r.name}{' '}
-                            <span className="font-mono text-[#E5A00D] ml-1">{r.code}</span>
+                            <span className="font-mono text-[#98A0B0] ml-1">{r.code}</span>
                           </p>
-                          <p className="text-[11px] text-[#9C9AA6] truncate">
+                          <p className="text-[11px] text-[#98A0B0] truncate">
                             {r.participantCount} viewer{r.participantCount === 1 ? '' : 's'} •{' '}
                             {r.streamMode === 'eco-shared' ? 'Eco Shared' : 'Per-Viewer'}
                             {r.currentMediaTitle ? ` • ${r.currentMediaTitle}` : ''}
@@ -270,7 +274,7 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
                             await api.adminCloseRoom(r.code);
                             load();
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#D94848]/15 text-[#D94848] text-xs font-medium hover:bg-[#D94848]/25"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#F43F5E]/15 text-[#F43F5E] text-xs font-medium hover:bg-[#F43F5E]/25"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           <span>Close</span>
@@ -281,29 +285,29 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
                 )}
               </div>
 
-              {/* Active Plex Transcodes / Streams */}
-              <div className="rounded-xl bg-[#0E0E10] border border-[#2B2B33] p-4 space-y-3">
+              {/* Active Streams */}
+              <div className="rounded-xl bg-[#07080A] border border-white/10 p-4 space-y-3">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-3.5 h-3.5 text-[#E5A00D]" />
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#9C9AA6]">
-                    Active Plex Streams ({overview?.streams.length ?? 0})
+                  <Activity className="w-3.5 h-3.5 text-[#F5F7FA]" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[#98A0B0]">
+                    Active Streams ({overview?.streams.length ?? 0})
                   </h3>
                 </div>
 
                 {overview && overview.streams.length === 0 ? (
-                  <p className="text-xs text-[#686670]">No active HLS streams.</p>
+                  <p className="text-xs text-[#5C6475]">No active HLS streams.</p>
                 ) : (
                   <div className="space-y-2">
                     {overview?.streams.map((s) => (
                       <div
                         key={s.streamToken}
-                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-[#16161A] border border-[#2B2B33]"
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg bg-[#101216] border border-white/10"
                       >
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-[#F4F2EE] truncate">
+                          <p className="text-xs font-semibold text-[#F5F7FA] truncate">
                             {s.mediaTitle}
                           </p>
-                          <p className="text-[11px] text-[#9C9AA6] font-mono truncate">
+                          <p className="text-[11px] text-[#98A0B0] font-mono truncate">
                             Room {s.roomCode} • {s.quality} •{' '}
                             {s.streamMode === 'eco-shared' ? 'Eco' : 'Individual'} • Seen{' '}
                             {formatTimeMs(Math.max(0, Date.now() - s.lastSeenAtMs))} ago
@@ -314,7 +318,7 @@ export function AdminModal({ open, onClose }: AdminModalProps) {
                             await api.adminKillStream(s.streamToken);
                             load();
                           }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#D94848]/15 text-[#D94848] text-xs font-medium hover:bg-[#D94848]/25"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#F43F5E]/15 text-[#F43F5E] text-xs font-medium hover:bg-[#F43F5E]/25"
                         >
                           <Square className="w-3 h-3 fill-current" />
                           <span>Stop</span>

@@ -17,6 +17,7 @@ export interface GuestSessionPayload {
   roomCode: string;
   participantId: string;
   name: string;
+  isSeat?: boolean;
   exp: number;
 }
 

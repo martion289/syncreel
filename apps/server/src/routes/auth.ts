@@ -31,7 +31,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: AppContext): void 
       return pin;
     } catch (err) {
       return reply.status(502).send({
-        error: err instanceof Error ? err.message : 'Failed to initiate Plex sign-in'
+        error: err instanceof Error ? err.message : 'Failed to initiate account sign-in'
       });
     }
   });
@@ -119,7 +119,7 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: AppContext): void 
       return { authenticated: true, user };
     } catch (err) {
       return reply.status(403).send({
-        error: err instanceof Error ? err.message : 'Plex verification failed'
+        error: err instanceof Error ? err.message : 'Account verification failed'
       });
     }
   });

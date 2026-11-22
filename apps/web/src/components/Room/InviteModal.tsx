@@ -38,6 +38,7 @@ interface InviteModalProps {
   onSendWebhook?: () => void;
   onOpenLibrary?: () => void;
   onOpenSwipeMatch?: () => void;
+  doneLabel?: string;
 }
 
 type CopyKind = 'code' | 'link' | 'invite';
@@ -55,7 +56,8 @@ export function InviteModal(props: InviteModalProps) {
     currentMediaTitle,
     onSendWebhook,
     onOpenLibrary,
-    onOpenSwipeMatch
+    onOpenSwipeMatch,
+    doneLabel = 'Done'
   } = props;
 
   const [includePin, setIncludePin] = useState(false);
@@ -174,20 +176,20 @@ export function InviteModal(props: InviteModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="invite-modal-title"
-        className="w-full max-w-xl max-h-[92dvh] flex flex-col rounded-2xl bg-[#16161A] border border-[#2B2B33] shadow-2xl overflow-hidden"
+        className="w-full max-w-xl max-h-[92dvh] flex flex-col rounded-2xl bg-[#101216] border border-white/12 overflow-hidden"
       >
         {/* Header */}
-        <div className="px-5 py-3.5 border-b border-[#2B2B33] flex items-center justify-between gap-3 shrink-0">
+        <div className="px-5 py-3.5 border-b border-white/8 flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-[#E5A00D]/15 border border-[#E5A00D]/40 flex items-center justify-center text-[#E5A00D] shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-[#181B22] border border-white/12 flex items-center justify-center text-[#F5F7FA] shrink-0">
               <Share2 className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h2 id="invite-modal-title" className="text-sm sm:text-base font-bold text-[#F4F2EE]">
+              <h2 id="invite-modal-title" className="font-display text-sm sm:text-base font-bold text-[#F5F7FA]">
                 Invite Everyone
               </h2>
-              <p className="text-xs text-[#9C9AA6] truncate">
-                {roomName} — friends don&apos;t need a Plex account
+              <p className="text-xs text-[#98A0B0] truncate">
+                {roomName} — friends don&apos;t need an account
               </p>
             </div>
           </div>
@@ -196,7 +198,7 @@ export function InviteModal(props: InviteModalProps) {
             type="button"
             onClick={onClose}
             aria-label="Close Invite modal"
-            className="p-1.5 rounded-lg text-[#9C9AA6] hover:text-[#F4F2EE] hover:bg-[#202026] shrink-0"
+            className="p-1.5 rounded-lg text-[#98A0B0] hover:text-[#F5F7FA] hover:bg-[#181B22] shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -205,14 +207,14 @@ export function InviteModal(props: InviteModalProps) {
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4">
           {/* Live "In the Room" Lobby Presence */}
-          <div className="p-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] space-y-2">
+          <div className="p-3 rounded-xl bg-[#07080A] border border-white/10 space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6]">
-                <Users className="w-3.5 h-3.5 text-[#34C77B]" />
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0]">
+                <Users className="w-3.5 h-3.5 text-[#22C55E]" />
                 In this room ({participants.length})
               </span>
               {participants.length <= 1 && (
-                <span className="text-[11px] text-[#686670]">
+                <span className="text-[11px] text-[#5C6475]">
                   Friends appear here live as they join
                 </span>
               )}
@@ -221,16 +223,16 @@ export function InviteModal(props: InviteModalProps) {
               {participants.map((p) => (
                 <span
                   key={p.id}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#16161A] border border-[#2B2B33] text-xs text-[#F4F2EE]"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#101216] border border-white/10 text-xs text-[#F5F7FA]"
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
-                      p.isBuffering ? 'bg-[#E5A00D]' : 'bg-[#34C77B]'
+                      p.isBuffering ? 'bg-[#F5F7FA] animate-pulse' : 'bg-[#22C55E]'
                     }`}
                   />
                   <span>{p.name}</span>
                   {p.role === 'host' && (
-                    <span className="text-[10px] font-semibold text-[#E5A00D]">Host</span>
+                    <span className="text-[10px] font-semibold text-[#98A0B0]">Host</span>
                   )}
                 </span>
               ))}
@@ -238,57 +240,57 @@ export function InviteModal(props: InviteModalProps) {
           </div>
 
           {/* QR Code + Giant Living-Room / Smart TV Code Card */}
-          <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 p-4 rounded-2xl bg-[#0E0E10] border border-[#2B2B33] items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 p-4 rounded-2xl bg-[#07080A] border border-white/10 items-center">
             <div className="flex flex-col items-center gap-1.5">
-              <div className="bg-white p-3 rounded-xl shadow-md">
+              <div className="bg-white p-3 rounded-xl">
                 <svg
                   viewBox={`0 0 ${qr.size} ${qr.size}`}
                   role="img"
                   aria-label={`QR code to join room ${roomCode}`}
                   className="w-36 h-36 sm:w-40 sm:h-40 block"
                 >
-                  <path d={qr.path} fill="#0E0E10" />
+                  <path d={qr.path} fill="#07080A" />
                 </svg>
               </div>
-              <span className="text-[11px] text-[#9C9AA6]">Scan with phone camera</span>
+              <span className="text-[11px] text-[#98A0B0]">Scan with phone camera</span>
             </div>
 
             <div className="space-y-3 min-w-0">
               <div>
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6]">
-                    <Tv className="w-3.5 h-3.5 text-[#E5A00D]" />
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0]">
+                    <Tv className="w-3.5 h-3.5 text-[#F5F7FA]" />
                     Room Code
                   </span>
                   <button
                     type="button"
                     onClick={() => void copyText('code', roomCode)}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#16161A] border border-[#2B2B33] text-[11px] font-medium text-[#F4F2EE] hover:border-[#E5A00D]/60"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[#101216] border border-white/10 text-[11px] font-medium text-[#F5F7FA] hover:border-white/30"
                   >
                     {copiedKind === 'code' ? (
                       <>
-                        <Check className="w-3 h-3 text-[#34C77B]" />
-                        <span className="text-[#34C77B]">Copied</span>
+                        <Check className="w-3 h-3 text-[#22C55E]" />
+                        <span className="text-[#22C55E]">Copied</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-3 h-3 text-[#E5A00D]" />
+                        <Copy className="w-3 h-3" />
                         <span>Copy Code</span>
                       </>
                     )}
                   </button>
                 </div>
-                <p className="text-2xl sm:text-3xl font-mono font-bold tracking-wider text-[#E5A00D] break-all">
+                <p className="text-2xl sm:text-3xl font-mono font-bold tracking-wider text-[#F5F7FA] break-all">
                   {roomCode}
                 </p>
-                <p className="text-[11px] text-[#9C9AA6] mt-1 leading-relaxed">
-                  Open <span className="font-mono text-[#F4F2EE]">{hostLabel}</span> on a Smart TV
+                <p className="text-[11px] text-[#98A0B0] mt-1 leading-relaxed">
+                  Open <span className="font-mono text-[#F5F7FA]">{hostLabel}</span> on a Smart TV
                   or laptop and enter this code.
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-[#2B2B33]">
-                <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#9C9AA6] mb-1">
+              <div className="pt-2 border-t border-white/8">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#98A0B0] mb-1">
                   Direct Invite Link
                 </span>
                 <div className="flex items-center gap-2">
@@ -296,23 +298,23 @@ export function InviteModal(props: InviteModalProps) {
                     href={inviteUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-[#16161A] border border-[#2B2B33] text-xs font-mono text-[#D4D2DC] truncate hover:border-[#E5A00D]/60"
+                    className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-[#101216] border border-white/10 text-xs font-mono text-[#C6CCD8] truncate hover:border-white/30"
                   >
                     {inviteUrl}
                   </a>
                   <button
                     type="button"
                     onClick={() => void copyText('link', inviteUrl)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#202026] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D] shrink-0"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#181B22] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 shrink-0"
                   >
                     {copiedKind === 'link' ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-[#34C77B]" />
-                        <span className="text-[#34C77B]">Copied</span>
+                        <Check className="w-3.5 h-3.5 text-[#22C55E]" />
+                        <span className="text-[#22C55E]">Copied</span>
                       </>
                     ) : (
                       <>
-                        <Link2 className="w-3.5 h-3.5 text-[#E5A00D]" />
+                        <Link2 className="w-3.5 h-3.5" />
                         <span>Copy Link</span>
                       </>
                     )}
@@ -328,7 +330,7 @@ export function InviteModal(props: InviteModalProps) {
               <button
                 type="button"
                 onClick={() => void handleNativeShare()}
-                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#E5A00D] text-[#111113] text-xs font-bold hover:bg-[#f0ad1c] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+                className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#F5F7FA] text-[#07080A] text-xs font-bold hover:bg-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 <Share2 className="w-4 h-4" />
                 <span>Share Invite…</span>
@@ -338,15 +340,15 @@ export function InviteModal(props: InviteModalProps) {
             <button
               type="button"
               onClick={() => void copyText('invite', inviteMessage)}
-              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                 !supportsNativeShare
-                  ? 'bg-[#E5A00D] border-[#E5A00D] text-[#111113] hover:bg-[#f0ad1c]'
-                  : 'bg-[#202026] border-[#2B2B33] text-[#F4F2EE] hover:border-[#E5A00D]'
+                  ? 'bg-[#F5F7FA] border-[#F5F7FA] text-[#07080A] hover:bg-white'
+                  : 'bg-[#181B22] border-white/10 text-[#F5F7FA] hover:border-white/30'
               }`}
             >
               {copiedKind === 'invite' ? (
                 <>
-                  <Check className="w-4 h-4 text-[#34C77B]" />
+                  <Check className="w-4 h-4 text-[#22C55E]" />
                   <span>Invite Copied ✓</span>
                 </>
               ) : (
@@ -360,16 +362,16 @@ export function InviteModal(props: InviteModalProps) {
             <button
               type="button"
               onClick={() => void copyText('link', inviteUrl)}
-              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D]/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#07080A] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
-              <Link2 className="w-4 h-4 text-[#E5A00D]" />
+              <Link2 className="w-4 h-4" />
               <span>{copiedKind === 'link' ? 'Link Copied ✓' : 'Copy Link Only'}</span>
             </button>
           </div>
 
-          {/* One-Tap Group Apps ("Include Everyone") */}
+          {/* One-Tap Group Apps */}
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6]">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0]">
               Send directly via
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -377,32 +379,32 @@ export function InviteModal(props: InviteModalProps) {
                 href={channelUrls.whatsapp}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#34C77B]/70 transition"
+                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#07080A] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-[#22C55E]/60 transition"
               >
-                <MessageCircle className="w-3.5 h-3.5 text-[#34C77B]" />
+                <MessageCircle className="w-3.5 h-3.5 text-[#22C55E]" />
                 <span>WhatsApp</span>
               </a>
               <a
                 href={channelUrls.sms}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D]/70 transition"
+                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#07080A] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 transition"
               >
-                <MessageSquare className="w-3.5 h-3.5 text-[#E5A00D]" />
+                <MessageSquare className="w-3.5 h-3.5 text-[#F5F7FA]" />
                 <span>Messages / SMS</span>
               </a>
               <a
                 href={channelUrls.telegram}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-sky-400/70 transition"
+                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#07080A] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 transition"
               >
-                <Send className="w-3.5 h-3.5 text-sky-400" />
+                <Send className="w-3.5 h-3.5 text-[#98A0B0]" />
                 <span>Telegram</span>
               </a>
               <a
                 href={channelUrls.email}
-                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#9C9AA6] transition"
+                className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#07080A] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 transition"
               >
-                <Mail className="w-3.5 h-3.5 text-[#D4D2DC]" />
+                <Mail className="w-3.5 h-3.5 text-[#C6CCD8]" />
                 <span>Email</span>
               </a>
             </div>
@@ -411,16 +413,16 @@ export function InviteModal(props: InviteModalProps) {
               <button
                 type="button"
                 onClick={handleWebhookPost}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D] transition"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#07080A] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 transition"
               >
                 {webhookSent ? (
                   <>
-                    <Check className="w-4 h-4 text-[#34C77B]" />
-                    <span className="text-[#34C77B]">Posted to Discord / Webhook ✓</span>
+                    <Check className="w-4 h-4 text-[#22C55E]" />
+                    <span className="text-[#22C55E]">Posted to Discord / Webhook ✓</span>
                   </>
                 ) : (
                   <>
-                    <Bell className="w-4 h-4 text-[#E5A00D]" />
+                    <Bell className="w-4 h-4" />
                     <span>Post Invite to Discord / Webhook</span>
                   </>
                 )}
@@ -429,20 +431,20 @@ export function InviteModal(props: InviteModalProps) {
           </div>
 
           {/* Formatted Message Preview & Optional PIN Toggle */}
-          <div className="p-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] space-y-2.5">
+          <div className="p-3 rounded-xl bg-[#07080A] border border-white/10 space-y-2.5">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9C9AA6]">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#98A0B0]">
                 Invite Message Preview
               </span>
               {hasPin && (
-                <label className="flex items-center gap-1.5 text-xs text-[#F4F2EE] cursor-pointer">
+                <label className="flex items-center gap-1.5 text-xs text-[#F5F7FA] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includePin}
                     onChange={(e) => setIncludePin(e.target.checked)}
-                    className="w-3.5 h-3.5 accent-[#E5A00D]"
+                    className="w-3.5 h-3.5 accent-[#F5F7FA]"
                   />
-                  <Lock className="w-3 h-3 text-[#E5A00D]" />
+                  <Lock className="w-3 h-3" />
                   <span>Include Room PIN in invite</span>
                 </label>
               )}
@@ -450,7 +452,7 @@ export function InviteModal(props: InviteModalProps) {
 
             {hasPin && includePin && (
               <div className="flex items-center gap-2">
-                <label htmlFor="invite-pin-input" className="text-[11px] text-[#9C9AA6] shrink-0">
+                <label htmlFor="invite-pin-input" className="text-[11px] text-[#98A0B0] shrink-0">
                   PIN to share:
                 </label>
                 <input
@@ -464,19 +466,19 @@ export function InviteModal(props: InviteModalProps) {
                   }}
                   maxLength={24}
                   placeholder="Enter room PIN"
-                  className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#16161A] border border-[#2B2B33] text-xs font-mono text-[#F4F2EE] placeholder-[#686670] focus:outline-none focus:border-[#E5A00D]"
+                  className="flex-1 min-w-0 px-2.5 py-1 rounded-lg bg-[#101216] border border-white/10 text-xs font-mono text-[#F5F7FA] placeholder-[#5C6475] focus:outline-none focus:border-white/30"
                 />
               </div>
             )}
 
-            <pre className="text-[11px] font-sans text-[#D4D2DC] whitespace-pre-wrap break-words leading-relaxed bg-[#16161A] border border-[#2B2B33]/80 rounded-lg p-2.5">
+            <pre className="text-[11px] font-sans text-[#C6CCD8] whitespace-pre-wrap break-words leading-relaxed bg-[#101216] border border-white/8 rounded-lg p-2.5">
               {inviteMessage}
             </pre>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#2B2B33] bg-[#16161A] flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div className="px-5 py-3 border-t border-white/8 bg-[#101216] flex flex-wrap items-center justify-between gap-2 shrink-0">
           {selfRole === 'host' ? (
             <div className="flex items-center gap-2">
               {onOpenSwipeMatch && (
@@ -486,9 +488,9 @@ export function InviteModal(props: InviteModalProps) {
                     onClose();
                     onOpenSwipeMatch();
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202026] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181B22] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30"
                 >
-                  <Flame className="w-3.5 h-3.5 text-[#E5A00D]" />
+                  <Flame className="w-3.5 h-3.5" />
                   <span>Swipe Match</span>
                 </button>
               )}
@@ -499,9 +501,9 @@ export function InviteModal(props: InviteModalProps) {
                     onClose();
                     onOpenLibrary();
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202026] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#181B22] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30"
                 >
-                  <Film className="w-3.5 h-3.5 text-[#E5A00D]" />
+                  <Film className="w-3.5 h-3.5" />
                   <span>Pick Movie / Show</span>
                 </button>
               )}
@@ -513,9 +515,9 @@ export function InviteModal(props: InviteModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-[#E5A00D] text-[#111113] text-xs font-semibold hover:bg-[#f0ad1c]"
+            className="px-4 py-1.5 rounded-lg bg-[#F5F7FA] text-[#07080A] text-xs font-semibold hover:bg-white"
           >
-            Done
+            {doneLabel}
           </button>
         </div>
       </div>

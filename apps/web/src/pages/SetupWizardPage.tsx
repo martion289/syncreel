@@ -24,7 +24,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
   const [servers, setServers] = useState<DiscoveredPlexServer[]>([]);
   const [selectedUrl, setSelectedUrl] = useState<string>('');
   const [customUrl, setCustomUrl] = useState<string>('');
-  const [allowPlexFriends, setAllowPlexFriends] = useState(false);
+  const [allowPlexFriends, setAllowPlexFriends] = useState(true);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [webhookAutoNotify, setWebhookAutoNotify] = useState(false);
 
@@ -40,7 +40,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
         const res = await api.pollSetupPin(pinId);
         if (!cancelled && res.claimed && res.setupTicket) {
           setSetupTicket(res.setupTicket);
-          setUsername(res.username || 'Plex Owner');
+          setUsername(res.username || 'Server Owner');
           const foundServers = res.servers ?? [];
           setServers(foundServers);
           const firstReachable = foundServers
@@ -53,7 +53,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Plex sign-in failed');
+          setError(err instanceof Error ? err.message : 'Sign-in failed');
           setPinId(null);
         }
       }
@@ -65,15 +65,15 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
     };
   }, [pinId, step]);
 
-  const startPlexSignIn = async () => {
+  const startAccountSignIn = async () => {
     setError(null);
     try {
       const pin = await api.createSetupPin();
       setPinId(pin.id);
       setAuthUrl(pin.authUrl);
-      window.open(pin.authUrl, 'syncreel-setup-plex', 'width=640,height=740,noopener');
+      window.open(pin.authUrl, 'syncreel-setup-auth', 'width=640,height=740,noopener');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create Plex PIN');
+      setError(err instanceof Error ? err.message : 'Failed to start sign-in');
     }
   };
 
@@ -85,7 +85,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
       const res = await api.rediscoverServers(setupTicket);
       setServers(res.servers);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to probe Plex servers');
+      setError(err instanceof Error ? err.message : 'Failed to probe media servers');
     } finally {
       setBusy(false);
     }
@@ -96,7 +96,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
     if (!setupTicket) return;
     const finalUrl = (customUrl.trim() || selectedUrl).trim();
     if (!finalUrl) {
-      setError('Select a Plex server URL or enter one manually');
+      setError('Select a media server URL or enter one manually');
       return;
     }
 
@@ -119,14 +119,14 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0E0E10] text-[#F4F2EE] flex items-center justify-center px-5 py-10">
-      <div className="w-full max-w-xl rounded-2xl bg-[#16161A] border border-[#2B2B33] p-6 sm:p-8 shadow-2xl space-y-6">
+    <div className="min-h-screen bg-[#07080A] text-[#F5F7FA] flex items-center justify-center px-5 py-10">
+      <div className="w-full max-w-xl rounded-2xl bg-[#101216] border border-white/10 p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/favicon.svg" alt="" className="w-9 h-9 rounded-lg" />
             <div>
-              <h1 className="text-lg font-bold text-[#F4F2EE]">Welcome to SyncReel</h1>
-              <p className="text-xs text-[#9C9AA6]">First-time server setup • Step {step} of 3</p>
+              <h1 className="font-display text-lg font-bold text-[#F5F7FA]">Welcome to SyncReel</h1>
+              <p className="text-xs text-[#98A0B0]">First-time server setup • Step {step} of 3</p>
             </div>
           </div>
           <div className="flex gap-1.5">
@@ -134,7 +134,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
               <span
                 key={s}
                 className={`w-6 h-1.5 rounded-full ${
-                  s <= step ? 'bg-[#E5A00D]' : 'bg-[#2B2B33]'
+                  s <= step ? 'bg-[#F5F7FA]' : 'bg-[#181B22]'
                 }`}
               />
             ))}
@@ -142,46 +142,46 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-[#D94848]/10 border border-[#D94848]/40 text-xs text-[#D94848]">
+          <div className="p-3 rounded-xl bg-[#F43F5E]/10 border border-[#F43F5E]/30 text-xs text-[#F43F5E]">
             {error}
           </div>
         )}
 
-        {/* Step 1: Plex OAuth */}
+        {/* Step 1: Account OAuth */}
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-base font-semibold text-[#F4F2EE]">
-              Connect your Plex Server Owner account
+            <h2 className="font-display text-base font-semibold text-[#F5F7FA]">
+              Connect your media server owner account
             </h2>
-            <p className="text-sm text-[#9C9AA6] leading-relaxed">
-              Sign in with the Plex account that owns your Media Server. SyncReel will automatically
+            <p className="text-sm text-[#98A0B0] leading-relaxed">
+              Sign in with the account that owns your Media Server. SyncReel will automatically
               discover your server connections and configure encrypted local storage.
             </p>
 
             {pinId ? (
-              <div className="p-4 rounded-xl bg-[#0E0E10] border border-[#2B2B33] space-y-3">
+              <div className="p-4 rounded-xl bg-[#07080A] border border-white/10 space-y-3">
                 <div className="flex items-center gap-2.5 text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#E5A00D]" />
-                  <span>Waiting for Plex sign-in…</span>
+                  <Loader2 className="w-4 h-4 animate-spin text-[#F5F7FA]" />
+                  <span>Waiting for account sign-in…</span>
                 </div>
                 {authUrl && (
                   <a
                     href={authUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-[#E5A00D] hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#F5F7FA] underline underline-offset-2"
                   >
-                    <span>Open Plex sign-in page</span>
+                    <span>Open sign-in page</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}
               </div>
             ) : (
               <button
-                onClick={() => void startPlexSignIn()}
-                className="w-full py-3 rounded-xl bg-[#E5A00D] text-[#111113] font-semibold text-sm hover:bg-[#f0ad1c] transition"
+                onClick={() => void startAccountSignIn()}
+                className="w-full py-3 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white transition"
               >
-                Sign in with Plex
+                Sign in with Media Account
               </button>
             )}
           </div>
@@ -192,14 +192,16 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-semibold text-[#F4F2EE]">Select Plex Media Server</h2>
-                <p className="text-xs text-[#9C9AA6]">Signed in as {username}</p>
+                <h2 className="font-display text-base font-semibold text-[#F5F7FA]">
+                  Select Media Server
+                </h2>
+                <p className="text-xs text-[#98A0B0]">Signed in as {username}</p>
               </div>
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => void refreshServers()}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#202026] text-xs text-[#F4F2EE]"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#181B22] border border-white/10 text-xs text-[#F5F7FA]"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${busy ? 'animate-spin' : ''}`} />
                 <span>Re-probe</span>
@@ -207,19 +209,18 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
             </div>
 
             {servers.length === 0 ? (
-              <p className="text-xs text-[#9C9AA6]">
-                No owned Plex servers were returned automatically. Enter your Plex server URL
-                below.
+              <p className="text-xs text-[#98A0B0]">
+                No owned media servers were returned automatically. Enter your server URL below.
               </p>
             ) : (
               <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                 {servers.map((srv) => (
                   <div
                     key={srv.machineIdentifier}
-                    className="p-3 rounded-xl bg-[#0E0E10] border border-[#2B2B33] space-y-2"
+                    className="p-3 rounded-xl bg-[#07080A] border border-white/10 space-y-2"
                   >
-                    <div className="flex items-center gap-2 text-xs font-semibold text-[#F4F2EE]">
-                      <Server className="w-3.5 h-3.5 text-[#E5A00D]" />
+                    <div className="flex items-center gap-2 text-xs font-semibold text-[#F5F7FA]">
+                      <Server className="w-3.5 h-3.5" />
                       <span>{srv.name}</span>
                     </div>
                     <div className="space-y-1.5">
@@ -235,19 +236,19 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
                             }}
                             className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs border transition ${
                               active
-                                ? 'bg-[#E5A00D]/15 border-[#E5A00D] text-[#F4F2EE]'
-                                : 'bg-[#16161A] border-[#2B2B33] text-[#9C9AA6] hover:text-[#F4F2EE]'
+                                ? 'bg-white/10 border-[#F5F7FA] text-[#F5F7FA]'
+                                : 'bg-[#101216] border-white/10 text-[#98A0B0] hover:text-[#F5F7FA]'
                             }`}
                           >
                             <span className="font-mono truncate">{c.uri}</span>
                             <span className="flex items-center gap-1.5 shrink-0">
                               {c.reachable ? (
-                                <span className="inline-flex items-center gap-1 text-[#34C77B] font-mono text-[10px]">
+                                <span className="inline-flex items-center gap-1 text-[#22C55E] font-mono text-[10px]">
                                   <Wifi className="w-3 h-3" />
                                   {c.latencyMs}ms
                                 </span>
                               ) : (
-                                <span className="text-[10px] text-[#686670]">Unreachable</span>
+                                <span className="text-[10px] text-[#5C6475]">Unreachable</span>
                               )}
                             </span>
                           </button>
@@ -260,15 +261,15 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
             )}
 
             <div>
-              <label className="block text-xs font-medium text-[#9C9AA6] mb-1">
-                Or enter custom Plex URL
+              <label className="block text-xs font-medium text-[#98A0B0] mb-1">
+                Or enter custom server URL
               </label>
               <input
                 type="url"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
                 placeholder="http://192.168.1.50:32400"
-                className="w-full px-3 py-2 rounded-xl bg-[#0E0E10] border border-[#2B2B33] text-xs font-mono text-[#F4F2EE] placeholder-[#686670] focus:outline-none focus:border-[#E5A00D]"
+                className="w-full px-3 py-2 rounded-xl bg-[#07080A] border border-white/10 text-xs font-mono text-[#F5F7FA] placeholder-[#5C6475] focus:outline-none focus:border-white/30"
               />
             </div>
 
@@ -276,7 +277,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
               type="button"
               disabled={!customUrl.trim() && !selectedUrl}
               onClick={() => setStep(3)}
-              className="w-full py-3 rounded-xl bg-[#E5A00D] text-[#111113] font-semibold text-sm hover:bg-[#f0ad1c] disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white disabled:opacity-50"
             >
               Continue
             </button>
@@ -286,28 +287,30 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
         {/* Step 3: Defaults & Finish */}
         {step === 3 && (
           <form onSubmit={finishSetup} className="space-y-4">
-            <h2 className="text-base font-semibold text-[#F4F2EE]">Room Defaults & Notifications</h2>
+            <h2 className="font-display text-base font-semibold text-[#F5F7FA]">
+              Room Defaults &amp; Notifications
+            </h2>
 
-            <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[#0E0E10] border border-[#2B2B33] cursor-pointer">
+            <label className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[#07080A] border border-white/10 cursor-pointer">
               <input
                 type="checkbox"
                 checked={allowPlexFriends}
                 onChange={(e) => setAllowPlexFriends(e.target.checked)}
-                className="mt-0.5 w-4 h-4 accent-[#E5A00D]"
+                className="mt-0.5 w-4 h-4 accent-[#F5F7FA]"
               />
               <div>
-                <p className="text-xs font-semibold text-[#F4F2EE]">
-                  Allow Plex Friends to host rooms
+                <p className="text-xs font-semibold text-[#F5F7FA]">
+                  Allow Shared Library Friends to host rooms
                 </p>
-                <p className="text-[11px] text-[#9C9AA6] mt-0.5">
-                  Anyone you already share your Plex server with can sign in and start rooms using
-                  their own library permissions. (Invite-link guests still need zero accounts.)
+                <p className="text-[11px] text-[#98A0B0] mt-0.5">
+                  Anyone you share your media library with can sign in and start rooms using their
+                  own permissions. (Invite-link guests still need zero accounts.)
                 </p>
               </div>
             </label>
 
-            <div className="p-3.5 rounded-xl bg-[#0E0E10] border border-[#2B2B33] space-y-2.5">
-              <label className="block text-xs font-semibold text-[#F4F2EE]">
+            <div className="p-3.5 rounded-xl bg-[#07080A] border border-white/10 space-y-2.5">
+              <label className="block text-xs font-semibold text-[#F5F7FA]">
                 Discord / Webhook URL (Optional)
               </label>
               <input
@@ -315,14 +318,14 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
                 value={webhookUrl}
                 onChange={(e) => setWebhookUrl(e.target.value)}
                 placeholder="https://discord.com/api/webhooks/..."
-                className="w-full px-3 py-2 rounded-lg bg-[#16161A] border border-[#2B2B33] text-xs text-[#F4F2EE] placeholder-[#686670] focus:outline-none focus:border-[#E5A00D]"
+                className="w-full px-3 py-2 rounded-lg bg-[#101216] border border-white/10 text-xs text-[#F5F7FA] placeholder-[#5C6475] focus:outline-none focus:border-white/30"
               />
-              <label className="flex items-center gap-2 text-xs text-[#9C9AA6] cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-[#98A0B0] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={webhookAutoNotify}
                   onChange={(e) => setWebhookAutoNotify(e.target.checked)}
-                  className="w-4 h-4 accent-[#E5A00D]"
+                  className="w-4 h-4 accent-[#F5F7FA]"
                 />
                 <span>Auto-announce when a movie or show loads</span>
               </label>
@@ -332,14 +335,14 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="px-4 py-2.5 rounded-xl bg-[#202026] text-xs font-medium text-[#F4F2EE]"
+                className="px-4 py-2.5 rounded-xl bg-[#181B22] border border-white/10 text-xs font-medium text-[#F5F7FA]"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={busy}
-                className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-[#E5A00D] text-[#111113] font-semibold text-sm hover:bg-[#f0ad1c] disabled:opacity-60"
+                className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white disabled:opacity-60"
               >
                 {busy ? (
                   <>
@@ -349,7 +352,7 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Finish & Launch SyncReel</span>
+                    <span>Finish &amp; Launch SyncReel</span>
                   </>
                 )}
               </button>
@@ -357,9 +360,9 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
           </form>
         )}
 
-        <div className="pt-3 border-t border-[#2B2B33] flex items-center gap-2 text-[11px] text-[#686670]">
-          <CheckCircle2 className="w-3.5 h-3.5 text-[#34C77B]" />
-          <span>Secrets and Plex tokens stay encrypted locally on your server.</span>
+        <div className="pt-3 border-t border-white/8 flex items-center gap-2 text-[11px] text-[#5C6475]">
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#22C55E]" />
+          <span>Secrets and session tokens stay encrypted locally on your server.</span>
         </div>
       </div>
     </div>

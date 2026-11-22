@@ -165,11 +165,113 @@ export interface ReadyCheckState {
   countdownEndServerTimeMs: number | null;
 }
 
+export type SoloDeckCategory =
+  | 'unwatched'
+  | 'award-winning'
+  | 'popular-now'
+  | 'short-sweet'
+  | 'throwback'
+  | 'comfort-rewatch'
+  | 'wildcard';
+
+export const SOLO_DECK_CATEGORIES: Array<{
+  id: SoloDeckCategory;
+  label: string;
+  badge: string;
+  description: string;
+}> = [
+  {
+    id: 'unwatched',
+    label: 'Unwatched Gems',
+    badge: 'Fresh to you',
+    description: "Titles in your library you haven't watched yet"
+  },
+  {
+    id: 'award-winning',
+    label: 'Award-Worthy',
+    badge: '7.8+ ★',
+    description: 'Critically acclaimed & top audience-rated picks'
+  },
+  {
+    id: 'popular-now',
+    label: 'Popular Right Now',
+    badge: 'Trending',
+    description: 'Recent additions & most-watched hits on your server'
+  },
+  {
+    id: 'short-sweet',
+    label: 'Short & Sweet',
+    badge: '< 100 min',
+    description: 'Tight sub-100-minute movies for weeknights'
+  },
+  {
+    id: 'throwback',
+    label: 'Throwback Classics',
+    badge: 'Pre-2010',
+    description: 'Highest-rated classics released in 2010 or earlier'
+  },
+  {
+    id: 'comfort-rewatch',
+    label: 'Comfort Rewatch',
+    badge: 'Favorites',
+    description: "Watched favorites you haven't replayed recently"
+  },
+  {
+    id: 'wildcard',
+    label: 'Wildcard',
+    badge: 'Anything Goes',
+    description: 'Completely random draw across your chosen library'
+  }
+];
+
+export interface SoloDiscoverRequest {
+  category: SoloDeckCategory;
+  libraryFilter: string;
+  genre?: string | null;
+  unwatchedOnly?: boolean;
+  deckSize: number;
+}
+
+export interface SoloDiscoverResponse {
+  items: MediaSummary[];
+  serverMachineId?: string;
+  serverName?: string;
+}
+
 export interface SwipeMatchConfig {
+  category?: SoloDeckCategory;
   libraryFilter: string; // 'all' | 'movie' | 'show' | sectionKey
   genre: string | null; // null = Wildcard
   unwatchedOnly: boolean;
   deckSize: number;
+}
+
+export interface KnockoutMatchup {
+  id: string;
+  left: MediaSummary;
+  right: MediaSummary;
+  winnerKey?: string;
+}
+
+export interface KnockoutBracketState {
+  roundNumber: number;
+  roundTitle: string;
+  roundContenderCount: number;
+  matchups: KnockoutMatchup[];
+  currentMatchIndex: number;
+  byeItem: MediaSummary | null;
+  nextRoundPool: MediaSummary[];
+  eliminatedInSemis: MediaSummary[];
+  runnerUp: MediaSummary | null;
+  champion: MediaSummary | null;
+  totalChoicesMade: number;
+  totalChoicesRequired: number;
+}
+
+export interface SwipeKnockoutState extends KnockoutBracketState {
+  votesByParticipantId: Record<string, string>;
+  tied: boolean;
+  lastTieBreakMessage?: string | null;
 }
 
 export interface SwipeMatchState {
@@ -181,12 +283,14 @@ export interface SwipeMatchState {
   likesByRatingKey: Record<string, string[]>;
   progressByParticipantId: Record<string, number>;
   matchedRatingKeys: string[];
+  knockout?: SwipeKnockoutState | null;
   createdAtMs: number;
 }
 
 export interface RoomSnapshot {
   code: string;
   name: string;
+  purpose?: 'watch' | 'picker';
   hasPin: boolean;
   hostOnlyControl: boolean;
   streamMode: StreamMode;
@@ -250,6 +354,7 @@ export interface DiscoveredPlexServer {
 export interface RoomPublicInfo {
   code: string;
   name: string;
+  purpose?: 'watch' | 'picker';
   hasPin: boolean;
   participantCount: number;
   currentMediaTitle?: string;
@@ -258,6 +363,7 @@ export interface RoomPublicInfo {
   hasAccess?: boolean;
   selfRole?: ParticipantRole;
   selfName?: string;
+  hostAlreadyConnected?: boolean;
 }
 
 export interface TextSubtitleTrack {

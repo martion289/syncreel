@@ -45,7 +45,7 @@ export function registerSetupRoutes(app: FastifyInstance, ctx: AppContext): void
       return await createPlexAuthPin(ctx.config.clientIdentifier, ctx.fetchFn);
     } catch (err) {
       return reply.status(502).send({
-        error: err instanceof Error ? err.message : 'Failed to create Plex auth PIN'
+        error: err instanceof Error ? err.message : 'Failed to create sign-in PIN'
       });
     }
   });
@@ -73,7 +73,7 @@ export function registerSetupRoutes(app: FastifyInstance, ctx: AppContext): void
         }
       });
       if (!userRes.ok) {
-        throw new Error('Failed to fetch Plex account profile');
+        throw new Error('Failed to fetch account profile');
       }
       const userJson = (await userRes.json()) as {
         id: number;
@@ -87,7 +87,7 @@ export function registerSetupRoutes(app: FastifyInstance, ctx: AppContext): void
       ctx.pendingSetups.set(setupTicket, {
         plexToken: check.authToken,
         plexUserId: userJson.id,
-        username: userJson.username || userJson.title || 'Plex Host',
+        username: userJson.username || userJson.title || 'Server Owner',
         email: userJson.email,
         thumb: userJson.thumb,
         createdAtMs: Date.now()
@@ -102,12 +102,12 @@ export function registerSetupRoutes(app: FastifyInstance, ctx: AppContext): void
       return {
         claimed: true,
         setupTicket,
-        username: userJson.username || userJson.title || 'Plex Host',
+        username: userJson.username || userJson.title || 'Server Owner',
         servers
       };
     } catch (err) {
       return reply.status(502).send({
-        error: err instanceof Error ? err.message : 'Plex authentication failed'
+        error: err instanceof Error ? err.message : 'Account authentication failed'
       });
     }
   });
@@ -217,7 +217,7 @@ export function registerSetupRoutes(app: FastifyInstance, ctx: AppContext): void
       };
     } catch (err) {
       return reply.status(400).send({
-        error: err instanceof Error ? err.message : 'Unable to connect to that Plex URL'
+        error: err instanceof Error ? err.message : 'Unable to connect to that media server URL'
       });
     }
   });

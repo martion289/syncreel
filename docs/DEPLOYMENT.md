@@ -38,10 +38,10 @@ HTTPS is required for:
 
 ### Option A — Caddy (Recommended)
 
-See [`deploy/Caddyfile.example`](../deploy/Caddyfile.example). Caddy handles automatic TLS, WebSocket upgrades (`/ws`), and unbuffered HLS streaming when `flush_interval -1` is set:
+See [`deploy/Caddyfile.example`](../deploy/Caddyfile.example). Caddy handles automatic TLS, WebSocket upgrades (`/ws`), and unbuffered HLS streaming when `flush_interval -1` is set. You can also bind a second subdomain (e.g. `swipe.example.com`) to the same container to land directly on the Standalone & IRL Movie Picker:
 
 ```caddyfile
-watch.example.com {
+watch.example.com, swipe.example.com {
     encode zstd gzip
 
     reverse_proxy syncreel:3000 {

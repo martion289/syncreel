@@ -242,4 +242,62 @@ describe('RoomManager Social Features (Swipe Match, Polls, Ready Check, Slugs, M
       await rm.shutdown();
     }
   });
+
+  it('runs synced multi-phone 1v1 Knockout voting with 1-1 tie detection and coin-flip tie-breaker', async () => {
+    const { client, fetchFn } = createMockPlex();
+    const sm = new StreamSessionManager(() => client);
+    const rm = new RoomManager({
+      getPlexClient: () => client,
+      getPlexUrl: () => 'http://127.0.0.1:32400',
+      clientIdentifier: 'test',
+      streamManager: sm,
+      getWebhookConfig: () => ({ webhookUrl: '', webhookAutoNotify: false, publicUrl: '' }),
+      fetchFn
+    });
+
+    try {
+      const room = rm.createRoom({ name: 'Couple Picker', purpose: 'picker' });
+      const p1Sock = createMockSocket();
+      const p2Sock = createMockSocket();
+
+      rm.attachSocket(room, { id: 'host-1', name: 'Ryan', role: 'host' }, p1Sock.ws);
+      rm.attachSocket(room, { id: 'guest-1', name: 'Sam', role: 'guest' }, p2Sock.ws);
+
+      await rm.startSwipeMatch(
+        room,
+        { libraryFilter: 'all', genre: null, unwatchedOnly: false, deckSize: 15 },
+        'Ryan'
+      );
+
+      // Both players match on titles 101 and 103
+      rm.recordSwipeVote(room, 'host-1', '101', 'yes');
+      rm.recordSwipeVote(room, 'guest-1', '101', 'yes');
+      rm.recordSwipeVote(room, 'host-1', '103', 'yes');
+      rm.recordSwipeVote(room, 'guest-1', '103', 'yes');
+
+      const ko = rm.startSwipeKnockout(room, 'Ryan');
+      expect(ko.roundContenderCount).toBe(2);
+      expect(ko.tied).toBe(false);
+      expect(ko.champion).toBeNull();
+
+      const matchup = ko.matchups[0];
+      // Split vote: 1-1 tie
+      const afterP1 = rm.voteSwipeKnockout(room, 'host-1', matchup.left.ratingKey);
+      expect(afterP1?.tied).toBe(false);
+      expect(afterP1?.champion).toBeNull();
+
+      const afterTie = rm.voteSwipeKnockout(room, 'guest-1', matchup.right.ratingKey);
+      expect(afterTie?.tied).toBe(true);
+      expect(afterTie?.champion).toBeNull();
+
+      // Coin flip tie-breaker crowns a champion cleanly
+      const afterCoin = rm.resolveSwipeKnockoutTie(room, 'Sam', 'coinflip');
+      expect(afterCoin?.tied).toBe(false);
+      expect(afterCoin?.champion).not.toBeNull();
+      expect(afterCoin?.lastTieBreakMessage).toContain('Coin flip');
+    } finally {
+      await sm.stopAll();
+      await rm.shutdown();
+    }
+  });
 });

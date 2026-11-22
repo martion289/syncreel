@@ -5,6 +5,7 @@ import type {
   MediaSummary,
   PlexGenre,
   PlexLibrarySection,
+  SoloDiscoverRequest,
   SwipeMatchConfig
 } from '@syncreel/shared';
 
@@ -85,6 +86,9 @@ interface RawPlexMetadata {
   audienceRating?: number;
   contentRating?: string;
   childCount?: number;
+  viewCount?: number;
+  lastViewedAt?: number;
+  addedAt?: number;
   Genre?: Array<{ tag?: string }> | { tag?: string };
   Media?: RawPlexMedia[] | RawPlexMedia;
   Marker?: RawPlexMarker[] | RawPlexMarker;
@@ -314,7 +318,14 @@ export class PlexClient {
 
   async getSectionItems(
     sectionId: string,
-    opts: { start?: number; size?: number; sort?: string; genreKey?: string; unwatchedOnly?: boolean } = {}
+    opts: {
+      start?: number;
+      size?: number;
+      sort?: string;
+      genreKey?: string;
+      unwatchedOnly?: boolean;
+      watchedOnly?: boolean;
+    } = {}
   ): Promise<{ items: MediaSummary[]; totalSize: number }> {
     const params = new URLSearchParams({
       'X-Plex-Container-Start': String(opts.start ?? 0),
@@ -323,6 +334,7 @@ export class PlexClient {
     if (opts.sort) params.set('sort', opts.sort);
     if (opts.genreKey) params.set('genre', opts.genreKey);
     if (opts.unwatchedOnly) params.set('unwatched', '1');
+    if (opts.watchedOnly) params.set('unwatched', '0');
 
     const json = await this.requestJson<{
       MediaContainer?: { totalSize?: number; Metadata?: RawPlexMetadata[] };
@@ -335,7 +347,194 @@ export class PlexClient {
     };
   }
 
+  async getCuratedDeckCandidates(input: SoloDiscoverRequest): Promise<MediaSummary[]> {
+    const sections = await this.getLibraries();
+    const targetSections = sections.filter((s) => {
+      if (input.libraryFilter === 'all') return true;
+      if (input.libraryFilter === 'movie' || input.libraryFilter === 'show') {
+        return s.type === input.libraryFilter;
+      }
+      return s.key === input.libraryFilter;
+    });
+
+    const genres = input.genre ? await this.getGenres(input.libraryFilter) : [];
+    const matchedGenre = input.genre
+      ? genres.find((g) => g.title.toLowerCase() === input.genre!.toLowerCase())
+      : undefined;
+
+    const category = input.category || 'unwatched';
+    const wantUnwatched = category === 'unwatched' ? true : category === 'comfort-rewatch' ? false : Boolean(input.unwatchedOnly);
+
+    const fetchForSection = async (
+      sec: PlexLibrarySection,
+      opts: { sort: string; size: number; unwatchedOnly?: boolean; watchedOnly?: boolean }
+    ) => {
+      let genreKey: string | undefined;
+      if (input.genre) {
+        genreKey = matchedGenre?.keysBySection[sec.key];
+        if (!genreKey) return [] as MediaSummary[];
+      }
+      const res = await this.getSectionItems(sec.key, {
+        start: 0,
+        size: opts.size,
+        sort: opts.sort,
+        genreKey,
+        unwatchedOnly: opts.unwatchedOnly,
+        watchedOnly: opts.watchedOnly
+      }).catch(() => ({ items: [] as MediaSummary[], totalSize: 0 }));
+      return res.items;
+    };
+
+    const rawPool: MediaSummary[] = [];
+
+    for (const sec of targetSections) {
+      switch (category) {
+        case 'award-winning': {
+          const topAudience = await fetchForSection(sec, {
+            sort: 'audienceRating:desc',
+            size: 120,
+            unwatchedOnly: wantUnwatched
+          });
+          const topCritic =
+            topAudience.length > 0
+              ? topAudience
+              : await fetchForSection(sec, {
+                  sort: 'rating:desc',
+                  size: 120,
+                  unwatchedOnly: wantUnwatched
+                });
+          rawPool.push(...topCritic);
+          break;
+        }
+        case 'popular-now': {
+          const [recent, viewed, rated] = await Promise.all([
+            fetchForSection(sec, {
+              sort: 'addedAt:desc',
+              size: 50,
+              unwatchedOnly: wantUnwatched
+            }),
+            fetchForSection(sec, {
+              sort: 'viewCount:desc',
+              size: 50,
+              unwatchedOnly: wantUnwatched
+            }),
+            fetchForSection(sec, {
+              sort: 'audienceRating:desc',
+              size: 40,
+              unwatchedOnly: wantUnwatched
+            })
+          ]);
+          rawPool.push(...recent.slice(0, 35), ...viewed.slice(0, 35), ...rated.slice(0, 30));
+          break;
+        }
+        case 'short-sweet': {
+          if (input.libraryFilter === 'all' && sec.type !== 'movie' && targetSections.some((t) => t.type === 'movie')) {
+            continue;
+          }
+          const candidates = await fetchForSection(sec, {
+            sort: 'random',
+            size: 150,
+            unwatchedOnly: wantUnwatched
+          });
+          rawPool.push(...candidates);
+          break;
+        }
+        case 'throwback': {
+          const candidates = await fetchForSection(sec, {
+            sort: 'audienceRating:desc',
+            size: 150,
+            unwatchedOnly: wantUnwatched
+          });
+          rawPool.push(...candidates);
+          break;
+        }
+        case 'comfort-rewatch': {
+          const watched = await fetchForSection(sec, {
+            sort: 'lastViewedAt:asc',
+            size: 120,
+            watchedOnly: true
+          });
+          if (watched.length > 0) {
+            rawPool.push(...watched);
+          } else {
+            rawPool.push(
+              ...(await fetchForSection(sec, {
+                sort: 'audienceRating:desc',
+                size: 100
+              }))
+            );
+          }
+          break;
+        }
+        case 'wildcard':
+        case 'unwatched':
+        default: {
+          rawPool.push(
+            ...(await fetchForSection(sec, {
+              sort: 'random',
+              size: 100,
+              unwatchedOnly: wantUnwatched
+            }))
+          );
+          break;
+        }
+      }
+    }
+
+    // Deduplicate while preserving initial preference order
+    const dedupedMap = new Map<string, MediaSummary>();
+    for (const item of rawPool) {
+      if (!dedupedMap.has(item.ratingKey)) {
+        dedupedMap.set(item.ratingKey, item);
+      }
+    }
+    let filtered = [...dedupedMap.values()];
+
+    if (category === 'award-winning') {
+      const acclaimed = filtered.filter((m) => (m.rating ?? 0) >= 7.5);
+      if (acclaimed.length >= Math.min(6, input.deckSize)) {
+        filtered = acclaimed;
+      }
+    } else if (category === 'short-sweet') {
+      const under100 = filtered.filter((m) => m.durationMs > 0 && m.durationMs <= 100 * 60 * 1000);
+      if (under100.length >= 4) {
+        filtered = under100;
+      } else {
+        const withDuration = filtered.filter((m) => m.durationMs > 0).sort((a, b) => a.durationMs - b.durationMs);
+        if (withDuration.length > 0) filtered = withDuration;
+      }
+    } else if (category === 'throwback') {
+      const pre2010 = filtered.filter((m) => typeof m.year === 'number' && m.year <= 2010);
+      if (pre2010.length >= 4) {
+        filtered = pre2010;
+      } else {
+        const withYear = filtered.filter((m) => typeof m.year === 'number').sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999));
+        if (withYear.length > 0) filtered = withYear;
+      }
+    }
+
+    if (filtered.length === 0 && wantUnwatched) {
+      return this.getCuratedDeckCandidates({
+        ...input,
+        category: category === 'unwatched' ? 'wildcard' : category,
+        unwatchedOnly: false
+      });
+    }
+
+    return shuffleCopy(filtered).slice(0, input.deckSize);
+  }
+
   async getRandomDeckCandidates(config: SwipeMatchConfig): Promise<MediaSummary[]> {
+    if (config.category && config.category !== 'wildcard') {
+      return this.getCuratedDeckCandidates({
+        category: config.category,
+        libraryFilter: config.libraryFilter,
+        genre: config.genre,
+        unwatchedOnly: config.unwatchedOnly,
+        deckSize: config.deckSize
+      });
+    }
+
     const sections = await this.getLibraries();
     const targetSections = sections.filter((s) => {
       if (config.libraryFilter === 'all') return true;

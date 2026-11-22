@@ -56,6 +56,7 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
   const [chatEmojiBursts, setChatEmojiBursts] = useState<FloatingReaction[]>([]);
 
   const lastSwipeIdRef = useRef<string | null>(null);
+  const lastHadKnockoutRef = useRef(false);
   const initializedChatRef = useRef(false);
   const seenChatIdsRef = useRef<Set<string>>(new Set());
   const chatTimersRef = useRef<Map<string, number>>(new Map());
@@ -80,16 +81,31 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
     }
   }, [socketError, onRequireJoin]);
 
-  // Auto-open Swipe Match modal for everyone when the host deals a new deck
+  // Auto-open Swipe Match modal for everyone when the host deals a new deck (unless Invite modal is still up)
   useEffect(() => {
     const smId = snapshot?.swipeMatch?.id ?? null;
     if (smId && smId !== lastSwipeIdRef.current) {
       lastSwipeIdRef.current = smId;
-      setSwipeOpen(true);
+      if (!inviteOpen) {
+        setSwipeOpen(true);
+      }
     } else if (!smId) {
       lastSwipeIdRef.current = null;
     }
-  }, [snapshot?.swipeMatch?.id]);
+  }, [snapshot?.swipeMatch?.id, inviteOpen]);
+
+  // Auto-open Swipe Match modal for everyone when a live 1v1 Knockout starts
+  useEffect(() => {
+    const hasKnockout = Boolean(snapshot?.swipeMatch?.knockout);
+    if (hasKnockout && !lastHadKnockoutRef.current) {
+      lastHadKnockoutRef.current = true;
+      if (!inviteOpen) {
+        setSwipeOpen(true);
+      }
+    } else if (!hasKnockout) {
+      lastHadKnockoutRef.current = false;
+    }
+  }, [Boolean(snapshot?.swipeMatch?.knockout), inviteOpen]);
 
   const clearChatOverlayTimers = useCallback(() => {
     for (const timer of chatTimersRef.current.values()) {
@@ -183,13 +199,13 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
 
   if (kickedReason) {
     return (
-      <div className="min-h-screen bg-[#0E0E10] flex items-center justify-center px-5">
-        <div className="w-full max-w-md rounded-2xl bg-[#16161A] border border-[#D94848]/40 p-6 text-center space-y-4">
-          <h1 className="text-lg font-bold text-[#F4F2EE]">Removed from Room</h1>
-          <p className="text-sm text-[#9C9AA6]">{kickedReason}</p>
+      <div className="min-h-screen bg-[#07080A] flex items-center justify-center px-5">
+        <div className="w-full max-w-md rounded-2xl bg-[#101216] border border-[#F43F5E]/30 p-6 text-center space-y-4">
+          <h1 className="font-display text-lg font-bold text-[#F5F7FA]">Removed from Room</h1>
+          <p className="text-sm text-[#98A0B0]">{kickedReason}</p>
           <button
             onClick={onBackHome}
-            className="px-4 py-2.5 rounded-xl bg-[#202026] border border-[#2B2B33] text-sm font-medium text-[#F4F2EE] hover:border-[#E5A00D]"
+            className="px-4 py-2.5 rounded-xl bg-[#181B22] border border-white/10 text-sm font-medium text-[#F5F7FA] hover:border-white/30"
           >
             Back to Home
           </button>
@@ -200,8 +216,8 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
 
   if (!snapshot) {
     return (
-      <div className="min-h-screen bg-[#0E0E10] flex flex-col items-center justify-center gap-3 text-[#9C9AA6] text-sm">
-        <Loader2 className="w-6 h-6 animate-spin text-[#E5A00D]" />
+      <div className="min-h-screen bg-[#07080A] flex flex-col items-center justify-center gap-3 text-[#98A0B0] text-sm">
+        <Loader2 className="w-6 h-6 animate-spin text-[#F5F7FA]" />
         <span>Connecting to screening room {roomCode}…</span>
       </div>
     );
@@ -212,28 +228,28 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
   const showOverlayChat = floatingOverlayEnabled && (isFullscreen || !sidebarOpen);
 
   return (
-    <div className="h-screen bg-[#0E0E10] text-[#F4F2EE] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#07080A] text-[#F5F7FA] flex flex-col overflow-hidden">
       {/* Slim Room Top Bar */}
-      <header className="h-12 px-3 sm:px-4 bg-[#16161A] border-b border-[#2B2B33] flex items-center justify-between gap-3 shrink-0">
+      <header className="h-12 px-3 sm:px-4 bg-[#101216] border-b border-white/8 flex items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             onClick={onBackHome}
             aria-label="Leave room"
-            className="p-1.5 rounded-lg text-[#9C9AA6] hover:text-[#F4F2EE] hover:bg-[#202026] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+            className="p-1.5 rounded-lg text-[#98A0B0] hover:text-[#F5F7FA] hover:bg-[#181B22] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <span className="text-sm font-semibold truncate">{snapshot.name}</span>
-          <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#0E0E10] border border-[#2B2B33] text-[#E5A00D] shrink-0">
+          <span className="font-display text-sm font-semibold truncate">{snapshot.name}</span>
+          <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-[#07080A] border border-white/10 text-[#F5F7FA] shrink-0">
             {snapshot.code}
           </span>
           {isPreview && (
-            <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-[#E5A00D]/15 text-[#E5A00D] font-medium">
+            <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded bg-white/10 text-[#F5F7FA] font-medium">
               Guest Preview
             </span>
           )}
           {!connected && (
-            <span className="inline-flex items-center gap-1 text-[11px] text-[#D94848]">
+            <span className="inline-flex items-center gap-1 text-[11px] text-[#F43F5E]">
               <WifiOff className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Reconnecting…</span>
             </span>
@@ -244,22 +260,22 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
           <button
             type="button"
             onClick={() => setInviteOpen(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#202026] border border-[#2B2B33] text-xs font-medium text-[#F4F2EE] hover:border-[#E5A00D]/60 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#181B22] border border-white/10 text-xs font-medium text-[#F5F7FA] hover:border-white/30 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
           >
-            <Share2 className="w-3.5 h-3.5 text-[#E5A00D]" />
+            <Share2 className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Invite</span>
           </button>
 
           {(selfRole === 'host' || snapshot.swipeMatch) && (
             <button
               onClick={() => setSwipeOpen(true)}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
                 snapshot.swipeMatch
-                  ? 'bg-[#E5A00D]/15 border-[#E5A00D] text-[#E5A00D]'
-                  : 'bg-[#202026] border-[#2B2B33] text-[#F4F2EE] hover:border-[#E5A00D]'
+                  ? 'bg-[#F5F7FA] border-[#F5F7FA] text-[#07080A]'
+                  : 'bg-[#181B22] border-white/10 text-[#F5F7FA] hover:border-white/30'
               }`}
             >
-              <Flame className="w-3.5 h-3.5 text-[#E5A00D]" />
+              <Flame className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">
                 {snapshot.swipeMatch
                   ? `Swipe (${snapshot.swipeMatch.matchedRatingKeys.length})`
@@ -271,7 +287,7 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
           {selfRole === 'host' && (
             <button
               onClick={() => setLibraryOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E5A00D] text-[#111113] text-xs font-semibold hover:bg-[#f0ad1c] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D]"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F5F7FA] text-[#07080A] text-xs font-semibold hover:bg-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               <Film className="w-3.5 h-3.5" />
               <span>Library</span>
@@ -281,10 +297,10 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
           <button
             onClick={() => setSidebarOpen((o) => !o)}
             aria-label={sidebarOpen ? 'Hide chat and room panel' : 'Show chat and room panel'}
-            className={`p-1.5 rounded-lg border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E5A00D] ${
+            className={`p-1.5 rounded-lg border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${
               sidebarOpen
-                ? 'bg-[#202026] border-[#2B2B33] text-[#E5A00D]'
-                : 'bg-[#0E0E10] border-[#2B2B33] text-[#9C9AA6] hover:text-[#F4F2EE]'
+                ? 'bg-[#181B22] border-white/15 text-[#F5F7FA]'
+                : 'bg-[#07080A] border-white/10 text-[#98A0B0] hover:text-[#F5F7FA]'
             }`}
           >
             <MessageSquare className="w-4 h-4" />
@@ -369,6 +385,7 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
         open={swipeOpen}
         onClose={() => setSwipeOpen(false)}
         roomCode={snapshot.code}
+        selfParticipantId={selfParticipantId}
         selfRole={selfRole}
         participants={snapshot.participants}
         swipeMatch={snapshot.swipeMatch}
@@ -380,7 +397,12 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
 
       <InviteModal
         open={inviteOpen}
-        onClose={() => setInviteOpen(false)}
+        onClose={() => {
+          setInviteOpen(false);
+          if (snapshot.purpose === 'picker' && snapshot.swipeMatch) {
+            setSwipeOpen(true);
+          }
+        }}
         roomCode={snapshot.code}
         roomName={snapshot.name}
         hasPin={snapshot.hasPin}
@@ -395,6 +417,9 @@ export function RoomPage({ roomCode, onBackHome, onRequireJoin }: RoomPageProps)
         }
         onOpenLibrary={selfRole === 'host' ? () => setLibraryOpen(true) : undefined}
         onOpenSwipeMatch={selfRole === 'host' ? () => setSwipeOpen(true) : undefined}
+        doneLabel={
+          snapshot.purpose === 'picker' && snapshot.swipeMatch ? 'Start Swiping →' : 'Done'
+        }
       />
     </div>
   );

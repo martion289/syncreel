@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage.js';
 import { JoinRoomPage } from './pages/JoinRoomPage.js';
 import { RoomPage } from './pages/RoomPage.js';
 import { SetupWizardPage } from './pages/SetupWizardPage.js';
+import { StandalonePickerPage } from './pages/StandalonePickerPage.js';
 
 function parseRoomCode(pathname: string): string | null {
   const match = pathname.match(/^\/room\/([A-Za-z0-9-]+)/i);
@@ -62,8 +63,8 @@ export function App() {
 
   if (setupConfigured === null) {
     return (
-      <div className="min-h-screen bg-[#0E0E10] flex items-center justify-center text-[#9C9AA6] gap-2 text-sm">
-        <Loader2 className="w-5 h-5 animate-spin text-[#E5A00D]" />
+      <div className="min-h-screen bg-[#07080A] flex items-center justify-center text-[#98A0B0] gap-2 text-sm">
+        <Loader2 className="w-5 h-5 animate-spin text-[#F5F7FA]" />
         <span>Starting SyncReel…</span>
       </div>
     );
@@ -78,6 +79,12 @@ export function App() {
         }}
       />
     );
+  }
+
+  const isSwipeSubdomain =
+    typeof window !== 'undefined' && window.location.hostname.toLowerCase().startsWith('swipe.');
+  if (pathname === '/swipe' || (isSwipeSubdomain && pathname === '/')) {
+    return <StandalonePickerPage onNavigate={navigate} initialUser={wizardUser} />;
   }
 
   return <HomePage onNavigate={navigate} initialUser={wizardUser} />;

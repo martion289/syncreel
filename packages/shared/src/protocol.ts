@@ -24,7 +24,18 @@ export const QualityPresetSchema = z.enum([
 
 export const StreamModeSchema = z.enum(['per-viewer', 'eco-shared']);
 
+export const SoloDeckCategorySchema = z.enum([
+  'unwatched',
+  'award-winning',
+  'popular-now',
+  'short-sweet',
+  'throwback',
+  'comfort-rewatch',
+  'wildcard'
+]);
+
 export const SwipeMatchConfigSchema = z.object({
+  category: SoloDeckCategorySchema.optional(),
   libraryFilter: z.string().min(1).max(32).default('all'),
   genre: z.string().min(1).max(60).nullable().default(null),
   unwatchedOnly: z.boolean().default(true),
@@ -149,6 +160,18 @@ export const ClientEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('swipe:queueMatch'),
     ratingKey: z.string().min(1).max(64)
+  }),
+  z.object({
+    type: z.literal('swipe:knockoutStart')
+  }),
+  z.object({
+    type: z.literal('swipe:knockoutVote'),
+    ratingKey: z.string().min(1).max(64)
+  }),
+  z.object({
+    type: z.literal('swipe:knockoutTieBreak'),
+    mode: z.enum(['coinflip', 'pick']),
+    ratingKey: z.string().min(1).max(64).optional()
   }),
   z.object({
     type: z.literal('chat:send'),
