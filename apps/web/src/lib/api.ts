@@ -64,9 +64,10 @@ export const api = {
   // Setup Wizard
   getSetupStatus: () => fetchJson<SetupStatus>('/api/setup/status'),
 
-  createSetupPin: () =>
+  createSetupPin: (returnPath?: string) =>
     fetchJson<{ id: number; code: string; authUrl: string }>('/api/setup/plex/pin', {
-      method: 'POST'
+      method: 'POST',
+      ...(returnPath ? { body: JSON.stringify({ returnPath }) } : {})
     }),
 
   pollSetupPin: (pinId: number) =>
@@ -98,9 +99,10 @@ export const api = {
   // Auth
   getAuthMe: () => fetchJson<{ authenticated: boolean; user: AuthUser | null }>('/api/auth/me'),
 
-  createPlexPin: () =>
+  createPlexPin: (returnPath?: string) =>
     fetchJson<{ id: number; code: string; authUrl: string }>('/api/auth/plex/pin', {
-      method: 'POST'
+      method: 'POST',
+      ...(returnPath ? { body: JSON.stringify({ returnPath }) } : {})
     }),
 
   pollPlexPin: (pinId: number) =>

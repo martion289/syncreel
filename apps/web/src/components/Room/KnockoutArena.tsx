@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { formatMediaSubtitle, formatTimeMs } from '../../lib/format.js';
 import { advanceKnockoutBracket, createKnockoutBracket } from '../../lib/knockoutBracket.js';
+import { getPlexNativeAppUrl, getPlexWebUrl, isMobileClient } from '../../lib/mediaLinks.js';
 import { resolveCardArtworkUrl } from './SwipeDeckStage.js';
 
 interface KnockoutArenaProps {
@@ -43,26 +44,6 @@ interface KnockoutArenaProps {
   onQueueItem?: (item: MediaSummary) => void;
   onRestart?: () => void;
   restartLabel?: string;
-}
-
-function getPlexWebUrl(serverMachineId: string, ratingKey: string): string {
-  return `https://app.plex.tv/desktop/#!/server/${encodeURIComponent(serverMachineId)}/details?key=${encodeURIComponent(
-    `/library/metadata/${ratingKey}`
-  )}`;
-}
-
-function getPlexNativeAppUrl(serverMachineId: string, ratingKey: string): string {
-  return `plex://preplay/?metadataKey=${encodeURIComponent(
-    `/library/metadata/${ratingKey}`
-  )}&server=${encodeURIComponent(serverMachineId)}`;
-}
-
-function isMobileClient(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return (
-    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  );
 }
 
 interface ContenderCardProps {
@@ -366,7 +347,7 @@ export function KnockoutArena({
       ? getPlexWebUrl(serverMachineId, champ.ratingKey)
       : null;
     const mediaNativeUrl = serverMachineId
-      ? getPlexNativeAppUrl(serverMachineId, champ.ratingKey)
+      ? getPlexNativeAppUrl(serverMachineId, champ.ratingKey, champ.type)
       : null;
     const mediaPrimaryLink = isMobile ? mediaNativeUrl : mediaWebUrl;
 
@@ -570,7 +551,7 @@ export function KnockoutArena({
                       <a
                         href={
                           isMobile
-                            ? getPlexNativeAppUrl(serverMachineId, item.ratingKey)
+                            ? getPlexNativeAppUrl(serverMachineId, item.ratingKey, item.type)
                             : getPlexWebUrl(serverMachineId, item.ratingKey)
                         }
                         target={isMobile ? undefined : '_blank'}

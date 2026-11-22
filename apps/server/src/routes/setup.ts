@@ -5,6 +5,7 @@ import { HOST_COOKIE_NAME, signSessionToken } from '../auth/tokens.js';
 import {
   checkPlexAuthPin,
   createPlexAuthPin,
+  createRequestForwardUrlBuilder,
   discoverPlexServers,
   verifyPlexUserForServer
 } from '../plex/oauth.js';
@@ -37,12 +38,21 @@ export function registerSetupRoutes(app: FastifyInstance, ctx: AppContext): void
     };
   });
 
-  app.post('/api/setup/plex/pin', async (_req, reply) => {
+  app.post('/api/setup/plex/pin', async (req, reply) => {
     if (ctx.storage.isSetupComplete(ctx.config.plexUrl)) {
       return reply.status(409).send({ error: 'Setup is already complete' });
     }
     try {
-      return await createPlexAuthPin(ctx.config.clientIdentifier, ctx.fetchFn);
+      const body = req.body as { returnPath?: unknown } | undefined;
+      const returnPath = typeof body?.returnPath === 'string' ? body.returnPath : undefined;
+      return await createPlexAuthPin(ctx.config.clientIdentifier, ctx.fetchFn, {
+        buildForwardUrl: createRequestForwardUrlBuilder(
+          req,
+          ctx.config.isHttps,
+          returnPath,
+          'setupPin'
+        )
+      });
     } catch (err) {
       return reply.status(502).send({
         error: err instanceof Error ? err.message : 'Failed to create sign-in PIN'

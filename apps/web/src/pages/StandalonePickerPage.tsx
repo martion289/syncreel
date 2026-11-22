@@ -10,7 +10,6 @@ import { SOLO_DECK_CATEGORIES } from '@syncreel/shared';
 import {
   ArrowRight,
   ChevronDown,
-  ExternalLink,
   Film,
   Loader2,
   LogOut,
@@ -27,6 +26,13 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api.js';
 import { aggregatePassThePhoneLikes } from '../lib/knockoutBracket.js';
+import {
+  consumeReturnedAuthPin,
+  getCurrentReturnPath,
+  resolveAuthSessionFromReturn,
+  savePendingAuthPin,
+  type ReturnedAuthPin
+} from '../lib/plexAuthReturn.js';
 import { DeckBuilderControls } from '../components/Room/DeckBuilderControls.js';
 import { KnockoutArena } from '../components/Room/KnockoutArena.js';
 import { SwipeDeckStage } from '../components/Room/SwipeDeckStage.js';
@@ -59,9 +65,10 @@ function shuffleKeys(keys: string[]): string[] {
 export function StandalonePickerPage({ onNavigate, initialUser }: StandalonePickerPageProps) {
   const [user, setUser] = useState<AuthUser | null>(initialUser ?? null);
   const [authLoading, setAuthLoading] = useState(initialUser === undefined);
+  const [completingSignIn, setCompletingSignIn] = useState(false);
+  const [redirectingAuth, setRedirectingAuth] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [pendingAuthUrl, setPendingAuthUrl] = useState<string | null>(null);
-  const [pollingPinId, setPollingPinId] = useState<number | null>(null);
+  const returnedPinRef = useRef<ReturnedAuthPin | null | undefined>(undefined);
 
   // Active live session state
   const [activeMode, setActiveMode] = useState<PickerMode>('solo');
@@ -98,11 +105,49 @@ export function StandalonePickerPage({ onNavigate, initialUser }: StandalonePick
 
   useEffect(() => {
     if (initialUser !== undefined) return;
+    let cancelled = false;
+    if (returnedPinRef.current === undefined) {
+      returnedPinRef.current = consumeReturnedAuthPin('auth');
+    }
+    const returned = returnedPinRef.current;
+
+    if (returned) {
+      if (returned.fromRedirect) setCompletingSignIn(true);
+      resolveAuthSessionFromReturn(returned, {
+        pollPin: api.pollPlexPin,
+        getMe: api.getAuthMe
+      })
+        .then((outcome) => {
+          if (cancelled) return;
+          setUser(outcome.user);
+          if (outcome.error) setAuthError(outcome.error);
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setCompletingSignIn(false);
+            setAuthLoading(false);
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
     api
       .getAuthMe()
-      .then((res) => setUser(res.user))
-      .catch(() => setUser(null))
-      .finally(() => setAuthLoading(false));
+      .then((res) => {
+        if (!cancelled) setUser(res.user);
+      })
+      .catch(() => {
+        if (!cancelled) setUser(null);
+      })
+      .finally(() => {
+        if (!cancelled) setAuthLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [initialUser]);
 
   const dealLocalDeck = useCallback(
@@ -216,40 +261,15 @@ export function StandalonePickerPage({ onNavigate, initialUser }: StandalonePick
       .finally(() => setLoadingGenres(false));
   }, [user, libraryFilter]);
 
-  useEffect(() => {
-    if (!pollingPinId) return;
-    let cancelled = false;
-    const timer = window.setInterval(async () => {
-      try {
-        const res = await api.pollPlexPin(pollingPinId);
-        if (!cancelled && res.authenticated && res.user) {
-          setUser(res.user);
-          setPollingPinId(null);
-          setPendingAuthUrl(null);
-          setAuthError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setAuthError(err instanceof Error ? err.message : 'Sign-in failed');
-          setPollingPinId(null);
-          setPendingAuthUrl(null);
-        }
-      }
-    }, 2000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [pollingPinId]);
-
   const handleMediaSignIn = async () => {
     setAuthError(null);
+    setRedirectingAuth(true);
     try {
-      const pin = await api.createPlexPin();
-      setPendingAuthUrl(pin.authUrl);
-      setPollingPinId(pin.id);
-      window.open(pin.authUrl, 'syncreel-auth', 'width=640,height=740,noopener');
+      const pin = await api.createPlexPin(getCurrentReturnPath());
+      savePendingAuthPin('auth', pin.id);
+      window.location.assign(pin.authUrl);
     } catch (err) {
+      setRedirectingAuth(false);
       setAuthError(err instanceof Error ? err.message : 'Unable to start sign-in');
     }
   };
@@ -502,7 +522,7 @@ export function StandalonePickerPage({ onNavigate, initialUser }: StandalonePick
       {authLoading ? (
         <div className="flex-1 flex items-center justify-center text-[#98A0B0] gap-2 text-sm">
           <Loader2 className="w-4 h-4 animate-spin text-[#F5F7FA]" />
-          <span>Checking session…</span>
+          <span>{completingSignIn ? 'Completing sign-in…' : 'Checking session…'}</span>
         </div>
       ) : !user ? (
         <div className="flex-1 overflow-y-auto flex items-center justify-center p-5">
@@ -530,33 +550,21 @@ export function StandalonePickerPage({ onNavigate, initialUser }: StandalonePick
               </div>
             )}
 
-            {pollingPinId ? (
-              <div className="p-4 rounded-xl bg-[#07080A] border border-white/10 space-y-3">
-                <div className="flex items-center gap-2 text-sm text-[#F5F7FA]">
+            <button
+              type="button"
+              disabled={redirectingAuth}
+              onClick={() => void handleMediaSignIn()}
+              className="w-full py-3 px-4 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
+            >
+              {redirectingAuth ? (
+                <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Waiting for account sign-in…</span>
-                </div>
-                {pendingAuthUrl && (
-                  <a
-                    href={pendingAuthUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-[#F5F7FA] underline underline-offset-2"
-                  >
-                    <span>Popup blocked? Open sign-in page</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void handleMediaSignIn()}
-                className="w-full py-3 px-4 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white transition"
-              >
-                Sign in with Media Account
-              </button>
-            )}
+                  <span>Redirecting to sign in…</span>
+                </>
+              ) : (
+                <span>Sign in with Media Account</span>
+              )}
+            </button>
           </div>
         </div>
       ) : loadingDeck && deck.length === 0 ? (

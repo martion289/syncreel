@@ -26,7 +26,7 @@ function plexHeaders(clientId: string, token?: string): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: 'application/json',
     'X-Plex-Client-Identifier': clientId,
-    'X-Plex-Product': 'SyncReel for Plex',
+    'X-Plex-Product': 'SyncReel',
     'X-Plex-Version': '1.0.0',
     'X-Plex-Platform': 'Web',
     'X-Plex-Device': 'SyncReel Server'
@@ -37,9 +37,102 @@ function plexHeaders(clientId: string, token?: string): Record<string, string> {
   return headers;
 }
 
+/** Validate and normalize a same-origin relative return path. */
+export function sanitizeReturnPath(returnPath?: string): string {
+  if (!returnPath || typeof returnPath !== 'string') return '/';
+  if (/[\r\n\0]/.test(returnPath)) return '/';
+  const trimmed = returnPath.trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('\\')) {
+    return '/';
+  }
+  return trimmed;
+}
+
+function firstHeaderValue(value: string | string[] | undefined): string | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return undefined;
+  const first = raw.split(',')[0]?.trim();
+  return first || undefined;
+}
+
+export interface BuildSameOriginForwardUrlParams {
+  protocol?: string;
+  forwardedProto?: string;
+  host?: string;
+  forwardedHost?: string;
+  fallbackIsHttps: boolean;
+  returnPath?: string;
+  pinId: number;
+  pinParamName?: 'authPin' | 'setupPin';
+}
+
+/**
+ * Construct a strict same-origin `forwardUrl` for Plex OAuth PIN completion,
+ * appending `?authPin=<id>` (or `?setupPin=<id>`) while stripping stale params.
+ */
+export function buildSameOriginForwardUrl(
+  params: BuildSameOriginForwardUrlParams
+): string | undefined {
+  const rawHost = firstHeaderValue(params.forwardedHost) ?? firstHeaderValue(params.host);
+  if (!rawHost || /[\s/\\@?#]/.test(rawHost)) {
+    return undefined;
+  }
+
+  const candidateProto =
+    firstHeaderValue(params.forwardedProto)?.toLowerCase() ??
+    params.protocol?.trim().toLowerCase();
+  const proto =
+    candidateProto === 'http' || candidateProto === 'https'
+      ? candidateProto
+      : params.fallbackIsHttps
+        ? 'https'
+        : 'http';
+
+  const origin = `${proto}://${rawHost}`;
+  try {
+    const baseUrl = new URL(origin);
+    if ((baseUrl.protocol !== 'http:' && baseUrl.protocol !== 'https:') || !baseUrl.hostname) {
+      return undefined;
+    }
+
+    const url = new URL(sanitizeReturnPath(params.returnPath), baseUrl);
+    if (url.origin !== baseUrl.origin) {
+      return undefined;
+    }
+
+    url.searchParams.delete('authPin');
+    url.searchParams.delete('setupPin');
+    url.searchParams.set(params.pinParamName ?? 'authPin', String(params.pinId));
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+/** Build a `forwardUrl` factory from an incoming Fastify/HTTP request and return path. */
+export function createRequestForwardUrlBuilder(
+  req: { protocol?: string; headers: Record<string, string | string[] | undefined> },
+  fallbackIsHttps: boolean,
+  returnPath: string | undefined,
+  pinParamName: 'authPin' | 'setupPin'
+): (pinId: number) => string | undefined {
+  return (pinId: number) =>
+    buildSameOriginForwardUrl({
+      protocol: req.protocol,
+      forwardedProto: firstHeaderValue(req.headers['x-forwarded-proto']),
+      host: firstHeaderValue(req.headers.host),
+      forwardedHost: firstHeaderValue(req.headers['x-forwarded-host']),
+      fallbackIsHttps,
+      returnPath,
+      pinId,
+      pinParamName
+    });
+}
+
 export async function createPlexAuthPin(
   clientId: string,
-  fetchFn: typeof fetch = fetch
+  fetchFn: typeof fetch = fetch,
+  options?: { buildForwardUrl?: (pinId: number) => string | undefined }
 ): Promise<PlexPinCreated> {
   const res = await fetchFn('https://plex.tv/api/v2/pins?strong=true', {
     method: 'POST',
@@ -55,8 +148,13 @@ export async function createPlexAuthPin(
   const params = new URLSearchParams({
     clientID: clientId,
     code: data.code,
-    'context[device][product]': 'SyncReel for Plex'
+    'context[device][product]': 'SyncReel'
   });
+
+  const forwardUrl = options?.buildForwardUrl?.(data.id);
+  if (forwardUrl && (forwardUrl.startsWith('https://') || forwardUrl.startsWith('http://'))) {
+    params.set('forwardUrl', forwardUrl);
+  }
 
   return {
     id: data.id,

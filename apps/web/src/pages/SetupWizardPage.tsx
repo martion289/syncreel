@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AuthUser, DiscoveredPlexServer } from '@syncreel/shared';
 import {
   CheckCircle2,
-  ExternalLink,
   Loader2,
   RefreshCw,
   Server,
@@ -10,6 +9,13 @@ import {
   Wifi
 } from 'lucide-react';
 import { api } from '../lib/api.js';
+import {
+  consumeReturnedAuthPin,
+  getCurrentReturnPath,
+  resolveSetupPinFromReturn,
+  savePendingAuthPin,
+  type ReturnedAuthPin
+} from '../lib/plexAuthReturn.js';
 
 interface SetupWizardPageProps {
   onSetupComplete: (user: AuthUser) => void;
@@ -17,8 +23,8 @@ interface SetupWizardPageProps {
 
 export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [pinId, setPinId] = useState<number | null>(null);
-  const [authUrl, setAuthUrl] = useState<string | null>(null);
+  const [completingSignIn, setCompletingSignIn] = useState(false);
+  const [redirectingAuth, setRedirectingAuth] = useState(false);
   const [setupTicket, setSetupTicket] = useState<string | null>(null);
   const [username, setUsername] = useState<string>('');
   const [servers, setServers] = useState<DiscoveredPlexServer[]>([]);
@@ -30,49 +36,56 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const returnedPinRef = useRef<ReturnedAuthPin | null | undefined>(undefined);
 
   useEffect(() => {
-    if (!pinId || step !== 1) return;
-    let cancelled = false;
+    if (step !== 1) return;
+    if (returnedPinRef.current === undefined) {
+      returnedPinRef.current = consumeReturnedAuthPin('setup');
+    }
+    const returned = returnedPinRef.current;
+    if (!returned) return;
 
-    const timer = window.setInterval(async () => {
-      try {
-        const res = await api.pollSetupPin(pinId);
-        if (!cancelled && res.claimed && res.setupTicket) {
-          setSetupTicket(res.setupTicket);
-          setUsername(res.username || 'Server Owner');
-          const foundServers = res.servers ?? [];
+    let cancelled = false;
+    setCompletingSignIn(true);
+    resolveSetupPinFromReturn(returned, api.pollSetupPin)
+      .then(({ result, error: claimErr }) => {
+        if (cancelled) return;
+        if (result?.claimed && result.setupTicket) {
+          setSetupTicket(result.setupTicket);
+          setUsername(result.username || 'Server Owner');
+          const foundServers = result.servers ?? [];
           setServers(foundServers);
           const firstReachable = foundServers
             .flatMap((s) => s.connections)
             .find((c) => c.reachable);
           const firstAny = foundServers.flatMap((s) => s.connections)[0];
           setSelectedUrl(firstReachable?.uri || firstAny?.uri || '');
-          setPinId(null);
           setStep(2);
+          return;
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Sign-in failed');
-          setPinId(null);
+        if (claimErr) {
+          setError(claimErr);
         }
-      }
-    }, 2000);
+      })
+      .finally(() => {
+        if (!cancelled) setCompletingSignIn(false);
+      });
 
     return () => {
       cancelled = true;
-      clearInterval(timer);
     };
-  }, [pinId, step]);
+  }, [step]);
 
   const startAccountSignIn = async () => {
     setError(null);
+    setRedirectingAuth(true);
     try {
-      const pin = await api.createSetupPin();
-      setPinId(pin.id);
-      setAuthUrl(pin.authUrl);
-      window.open(pin.authUrl, 'syncreel-setup-auth', 'width=640,height=740,noopener');
+      const pin = await api.createSetupPin(getCurrentReturnPath());
+      savePendingAuthPin('setup', pin.id);
+      window.location.assign(pin.authUrl);
     } catch (err) {
+      setRedirectingAuth(false);
       setError(err instanceof Error ? err.message : 'Failed to start sign-in');
     }
   };
@@ -158,30 +171,28 @@ export function SetupWizardPage({ onSetupComplete }: SetupWizardPageProps) {
               discover your server connections and configure encrypted local storage.
             </p>
 
-            {pinId ? (
-              <div className="p-4 rounded-xl bg-[#07080A] border border-white/10 space-y-3">
+            {completingSignIn ? (
+              <div className="p-4 rounded-xl bg-[#07080A] border border-white/10">
                 <div className="flex items-center gap-2.5 text-sm">
                   <Loader2 className="w-4 h-4 animate-spin text-[#F5F7FA]" />
-                  <span>Waiting for account sign-in…</span>
+                  <span>Completing sign-in…</span>
                 </div>
-                {authUrl && (
-                  <a
-                    href={authUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-[#F5F7FA] underline underline-offset-2"
-                  >
-                    <span>Open sign-in page</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
               </div>
             ) : (
               <button
+                type="button"
+                disabled={redirectingAuth}
                 onClick={() => void startAccountSignIn()}
-                className="w-full py-3 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white transition"
+                className="w-full py-3 rounded-xl bg-[#F5F7FA] text-[#07080A] font-semibold text-sm hover:bg-white transition disabled:opacity-60 inline-flex items-center justify-center gap-2"
               >
-                Sign in with Media Account
+                {redirectingAuth ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Redirecting to sign in…</span>
+                  </>
+                ) : (
+                  <span>Sign in with Media Account</span>
+                )}
               </button>
             )}
           </div>

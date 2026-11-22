@@ -389,4 +389,82 @@ describe('Security, Guest Isolation, Setup & Role Boundaries', () => {
       await app.close();
     }
   });
+
+  it('builds strict same-origin forwardUrl and uses SyncReel product branding on PIN creation', async () => {
+    const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'syncreel-oauth-test-'));
+    tempDirs.push(dataDir);
+
+    let capturedProductHeader: string | undefined;
+    const mockFetch: typeof fetch = async (input, init) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.startsWith('https://plex.tv/api/v2/pins')) {
+        const headers = new Headers(init?.headers);
+        capturedProductHeader = headers.get('X-Plex-Product') ?? undefined;
+        return new Response(JSON.stringify({ id: 987654, code: 'PINCODE1' }), {
+          status: 201,
+          headers: { 'content-type': 'application/json' }
+        });
+      }
+      return new Response('Not Found', { status: 404 });
+    };
+
+    const { app } = await buildApp({
+      configOverrides: {
+        NODE_ENV: 'test',
+        DATA_DIR: dataDir,
+        APP_SECRET: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+        PUBLIC_URL: 'https://watch.example.com'
+      },
+      fetchFn: mockFetch,
+      serveStatic: false
+    });
+
+    try {
+      const validPin = await app.inject({
+        method: 'POST',
+        url: '/api/auth/plex/pin',
+        headers: { host: 'swipe.example.com', 'x-forwarded-proto': 'https' },
+        payload: { returnPath: '/swipe?category=unwatched' }
+      });
+      expect(validPin.statusCode).toBe(200);
+      expect(capturedProductHeader).toBe('SyncReel');
+
+      const { authUrl } = validPin.json() as { authUrl: string };
+      const authParams = new URLSearchParams(authUrl.split('#?')[1] ?? '');
+      expect(authParams.get('context[device][product]')).toBe('SyncReel');
+      expect(authParams.get('forwardUrl')).toBe(
+        'https://swipe.example.com/swipe?category=unwatched&authPin=987654'
+      );
+
+      for (const badPath of ['https://evil.com/x', '//evil.com/x', '/\\evil.com', '/bad\r\n']) {
+        const badRes = await app.inject({
+          method: 'POST',
+          url: '/api/auth/plex/pin',
+          headers: { host: 'watch.example.com', 'x-forwarded-proto': 'https' },
+          payload: { returnPath: badPath }
+        });
+        expect(badRes.statusCode).toBe(200);
+        const badBody = badRes.json() as { authUrl: string };
+        const badParams = new URLSearchParams(badBody.authUrl.split('#?')[1] ?? '');
+        const forward = new URL(badParams.get('forwardUrl')!);
+        expect(forward.origin).toBe('https://watch.example.com');
+        expect(forward.pathname).toBe('/');
+        expect(forward.searchParams.get('authPin')).toBe('987654');
+      }
+
+      // Empty body POST (without returnPath) still succeeds cleanly
+      const emptyPin = await app.inject({
+        method: 'POST',
+        url: '/api/setup/plex/pin',
+        headers: { host: 'watch.example.com', 'x-forwarded-proto': 'https' }
+      });
+      expect(emptyPin.statusCode).toBe(200);
+      const emptyParams = new URLSearchParams(
+        ((emptyPin.json() as { authUrl: string }).authUrl.split('#?')[1] ?? '')
+      );
+      expect(emptyParams.get('forwardUrl')).toBe('https://watch.example.com/?setupPin=987654');
+    } finally {
+      await app.close();
+    }
+  });
 });

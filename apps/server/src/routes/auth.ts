@@ -4,6 +4,7 @@ import { HOST_COOKIE_NAME, signSessionToken } from '../auth/tokens.js';
 import {
   checkPlexAuthPin,
   createPlexAuthPin,
+  createRequestForwardUrlBuilder,
   verifyPlexUserForServer
 } from '../plex/oauth.js';
 import { getHostAuthSession, type AppContext } from '../context.js';
@@ -25,9 +26,18 @@ export function registerAuthRoutes(app: FastifyInstance, ctx: AppContext): void 
     return { authenticated: true, user };
   });
 
-  app.post('/api/auth/plex/pin', async (_req, reply) => {
+  app.post('/api/auth/plex/pin', async (req, reply) => {
     try {
-      const pin = await createPlexAuthPin(ctx.config.clientIdentifier, ctx.fetchFn);
+      const body = req.body as { returnPath?: unknown } | undefined;
+      const returnPath = typeof body?.returnPath === 'string' ? body.returnPath : undefined;
+      const pin = await createPlexAuthPin(ctx.config.clientIdentifier, ctx.fetchFn, {
+        buildForwardUrl: createRequestForwardUrlBuilder(
+          req,
+          ctx.config.isHttps,
+          returnPath,
+          'authPin'
+        )
+      });
       return pin;
     } catch (err) {
       return reply.status(502).send({
